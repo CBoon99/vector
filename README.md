@@ -1,6 +1,6 @@
 # Doppleit Vector
 
-**Repository:** [github.com/CBoon99/vector-dp](https://github.com/CBoon99/vector-dp) · **Live demo:** [doppleit-vector.netlify.app](https://doppleit-vector.netlify.app)
+**Repository:** [github.com/CBoon99/vector](https://github.com/CBoon99/vector) · **Live demo:** [doppleit-vector.netlify.app](https://doppleit-vector.netlify.app)
 
 An open-source, **in-browser vector graphics editor** built with **vanilla JavaScript** (no React/Vue). Draw with basic tools, **import** PNG, JPG, WebP, or SVG, optionally **vectorize** images (Sobel edge trace with cell-poster fallback), **paint individual pixels** on bitmap imports, use a **layer list**, zoom/pan on the canvas, and **export** (where wired). Built as a learning project—experimental, not a full replacement for Illustrator or Figma.
 
@@ -18,7 +18,7 @@ An open-source, **in-browser vector graphics editor** built with **vanilla JavaS
 
 ### SEO & discovery
 
-The app ships with `meta` description/keywords, Open Graph / Twitter tags, `canonical` URL, JSON-LD `WebApplication` schema in `index.html` (with `codeRepository` → **github.com/CBoon99/vector-dp**), and `public/robots.txt` + `public/sitemap.xml` (copied to `dist/` on build). Point the **canonical** and sitemap **loc** to your real host if you deploy somewhere other than Netlify.
+The app ships with `meta` description/keywords, Open Graph / Twitter tags, `canonical` URL, JSON-LD `WebApplication` schema in `index.html` (with `codeRepository` → **github.com/CBoon99/vector**), and `public/robots.txt` + `public/sitemap.xml` (copied to `dist/` on build). Point the **canonical** and sitemap **loc** to your real host if you deploy somewhere other than Netlify.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/your-netlify-badge-id/deploy-status)](https://app.netlify.com/sites/doppleit-vector/deploys)
 
@@ -154,10 +154,10 @@ Try DoppleIt Vector online: [Live Demo](https://doppleit-vector.netlify.app)
 
 ```bash
 # Clone the repository
-git clone https://github.com/CBoon99/vector-dp.git
+git clone https://github.com/CBoon99/vector.git
 
 # Navigate to the project directory
-cd vector-dp
+cd vector
 
 # Install dependencies
 npm install
@@ -176,7 +176,7 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 ## 📞 Support
 
-- GitHub Issues: [Report a bug](https://github.com/CBoon99/vector-dp/issues)
+- GitHub Issues: [Report a bug](https://github.com/CBoon99/vector/issues)
 - Email: support@doppleit-vector.com
 - Discord: [Join our community](https://discord.gg/doppleit-vector)
 
@@ -369,20 +369,16 @@ A high-performance vector graphics editor with advanced features and optimizatio
 
 ## Setup
 
-1. Clone the repository:
+1. Clone this monorepo (includes smart-constraints and related modules under `src/`):
 ```bash
-git clone https://github.com/yourusername/smart-constraints-tool.git
-cd smart-constraints-tool
+git clone https://github.com/CBoon99/vector.git
+cd vector
 ```
 
-2. Install dependencies:
+2. Install dependencies and start the dev server:
 ```bash
 npm install
-```
-
-3. Start the development server:
-```bash
-npm start
+npm run dev
 ```
 
 ## Mobile Support
