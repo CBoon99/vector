@@ -1,0 +1,141 @@
+/* Performance Banner Theme Variables */
+:root {
+  /* Light Theme (Default) */
+  --banner-bg: #fff3cd;
+  --banner-text: #856404;
+  --banner-link: #856404;
+  --banner-text-secondary: #666;
+  --banner-details-bg: rgba(0,0,0,0.05);
+  --banner-button-bg: #856404;
+  --font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --banner-bg: #2d2d2d;
+  --banner-text: #ffd700;
+  --banner-link: #ffd700;
+  --banner-text-secondary: #999;
+  --banner-details-bg: rgba(255,255,255,0.1);
+  --banner-button-bg: #ffd700;
+}
+
+/* Performance Banner Base Styles */
+.performance-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--banner-bg);
+  color: var(--banner-text);
+  padding: 12px;
+  text-align: center;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-family: var(--font-family);
+}
+
+.performance-banner .content {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.performance-banner .controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.performance-banner .show-details {
+  margin-left: 8px;
+  color: var(--banner-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.performance-banner .help-icon {
+  margin-left: 4px;
+  cursor: help;
+}
+
+.performance-banner .details {
+  margin-top: 8px;
+  font-size: 14px;
+  text-align: left;
+  padding: 12px;
+  background: var(--banner-details-bg);
+  border-radius: 4px;
+}
+
+.performance-banner button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--banner-text);
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.performance-banner .export-button {
+  font-size: 16px;
+}
+
+.performance-banner label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.performance-banner .force-mode-toggle {
+  font-size: 14px;
+}
+
+.performance-banner .permanent-toggle {
+  font-size: 12px;
+  color: var(--banner-text-secondary);
+}
+
+/* Help Modal */
+.performance-help {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--banner-bg);
+  color: var(--banner-text);
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  z-index: 1100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.performance-help h3 {
+  margin-top: 0;
+}
+
+.performance-help ul {
+  padding-left: 20px;
+}
+
+.performance-help button {
+  background: var(--banner-button-bg);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+/* Low Performance Mode */
+body.low-perf {
+  /* Add any global styles for low performance mode */
+  --animation-duration: 0s;
+  --transition-duration: 0s;
+} 

@@ -1,0 +1,40 @@
+{
+  "name": "doppleit-vector",
+  "version": "1.0.0",
+  "description": "Smart Vector Graphics Editor with Advanced Features",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "webpack --mode=production",
+    "test": "jest",
+    "lint": "eslint src/**/*.js"
+  },
+  "keywords": [
+    "vector-graphics",
+    "smart-constraints",
+    "design-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "babel-loader": "^9.0.0",
+    "copy-webpack-plugin": "^13.0.1",
+    "css-loader": "^6.0.0",
+    "css-minimizer-webpack-plugin": "^7.0.2",
+    "eslint": "^8.0.0",
+    "html-webpack-plugin": "^5.0.0",
+    "jest": "^29.0.0",
+    "style-loader": "^3.0.0",
+    "terser-webpack-plugin": "^5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.0.0"
+  },
+  "dependencies": {
+    "html2pdf.js": "^0.10.3",
+    "jspdf": "^3.0.1",
+    "pdf-lib": "^1.17.1"
+  }
+}

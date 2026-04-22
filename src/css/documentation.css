@@ -1,0 +1,1275 @@
+/* Documentation Modal */
+.documentation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.documentation-content {
+    background: white;
+    width: 90%;
+    max-width: 1200px;
+    height: 90%;
+    max-height: 800px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.documentation-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.documentation-header h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 200px;
+}
+
+.search-button {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+}
+
+.print-button {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.print-button:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.print-options {
+    position: relative;
+}
+
+.print-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    display: none;
+    z-index: 1001;
+}
+
+.print-dropdown.visible {
+    display: block;
+}
+
+.print-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.print-dropdown button:hover {
+    background: #f5f5f5;
+}
+
+.print-quality-options {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.print-quality-options label {
+    display: block;
+    margin: 5px 0;
+    cursor: pointer;
+}
+
+.print-advanced-options {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.print-advanced-options h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.print-advanced-options select,
+.print-advanced-options input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.documentation-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.table-of-contents {
+    width: 250px;
+    border-right: 1px solid #eee;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.table-of-contents h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toc-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.toc-toggle.collapsed {
+    transform: rotate(-90deg);
+}
+
+.table-of-contents ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.table-of-contents li {
+    margin: 5px 0;
+    position: relative;
+}
+
+.progress-indicator {
+    position: absolute;
+    left: -20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #eee;
+    transform-origin: top;
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+}
+
+.toc-link {
+    display: block;
+    padding: 5px 10px;
+    color: #666;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.toc-link:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.toc-link.active {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.section-number {
+    color: #999;
+    margin-right: 5px;
+}
+
+.documentation-sections {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.doc-section {
+    margin-bottom: 30px;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+.doc-section.active {
+    opacity: 1;
+}
+
+.doc-section h2 {
+    margin: 0 0 15px 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.doc-section .content {
+    color: #666;
+    line-height: 1.6;
+}
+
+.highlight {
+    background: #fff3cd;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+.highlight-section {
+    animation: highlight-pulse 2s ease;
+}
+
+@keyframes highlight-pulse {
+    0% { background: #fff3cd; }
+    100% { background: transparent; }
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.back-to-top:hover {
+    background: #1565c0;
+    transform: translateY(-2px);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .documentation-content {
+        background: #1a1a1a;
+    }
+
+    .documentation-header {
+        border-bottom-color: #333;
+    }
+
+    .documentation-header h1 {
+        color: #fff;
+    }
+
+    .search-input {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .print-button {
+        border-color: #444;
+        color: #ccc;
+    }
+
+    .print-button:hover {
+        background: #2a2a2a;
+        color: #fff;
+    }
+
+    .print-dropdown {
+        background: #1a1a1a;
+        border-color: #444;
+    }
+
+    .print-dropdown button {
+        border-color: #444;
+        color: #ccc;
+    }
+
+    .print-dropdown button:hover {
+        background: #2a2a2a;
+        color: #fff;
+    }
+
+    .print-quality-options,
+    .print-advanced-options {
+        border-top-color: #333;
+    }
+
+    .print-advanced-options h4 {
+        color: #ccc;
+    }
+
+    .print-advanced-options select,
+    .print-advanced-options input {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .table-of-contents {
+        border-right-color: #333;
+    }
+
+    .table-of-contents h3 {
+        color: #fff;
+    }
+
+    .toc-toggle {
+        color: #ccc;
+    }
+
+    .progress-indicator {
+        background: #333;
+    }
+
+    .toc-link {
+        color: #ccc;
+    }
+
+    .toc-link:hover {
+        background: #2a2a2a;
+        color: #fff;
+    }
+
+    .toc-link.active {
+        background: #1a237e;
+        color: #fff;
+    }
+
+    .section-number {
+        color: #666;
+    }
+
+    .doc-section h2 {
+        color: #fff;
+    }
+
+    .doc-section .content {
+        color: #ccc;
+    }
+
+    .highlight {
+        background: #4a4a4a;
+    }
+
+    .back-to-top {
+        background: #1a237e;
+    }
+
+    .back-to-top:hover {
+        background: #0d47a1;
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .documentation-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    .documentation-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .header-actions {
+        width: 100%;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .print-dropdown {
+        width: 100%;
+        left: 0;
+        right: auto;
+    }
+
+    .documentation-layout {
+        flex-direction: column;
+    }
+
+    .table-of-contents {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        max-height: 200px;
+    }
+
+    .table-of-contents ul {
+        display: none;
+    }
+
+    .table-of-contents ul.visible {
+        display: block;
+    }
+
+    .back-to-top {
+        bottom: 10px;
+        right: 10px;
+    }
+}
+
+/* Tutorial Tooltips */
+.tutorial-tooltip {
+    position: absolute;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    max-width: 300px;
+    animation: tooltipFadeIn 0.3s ease;
+}
+
+.tutorial-tooltip h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.tutorial-tooltip p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.tutorial-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.tutorial-controls button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background: #f0f0f0;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.tutorial-controls button:hover {
+    background: #e0e0e0;
+}
+
+.tutorial-controls .next-step {
+    background: #007AFF;
+    color: white;
+}
+
+.tutorial-controls .next-step:hover {
+    background: #0056b3;
+}
+
+/* Level Indicator */
+.level-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: white;
+    border-radius: 20px;
+    padding: 8px 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 999;
+}
+
+.level-indicator .level {
+    font-weight: 500;
+    color: #333;
+}
+
+.level-indicator .change-level {
+    color: #007AFF;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Animations */
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .documentation-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .search-container {
+        width: 100%;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .documentation-content {
+        width: 95%;
+        padding: 16px;
+    }
+
+    .documentation-content h1 {
+        font-size: 20px;
+    }
+
+    .documentation-content h2 {
+        font-size: 18px;
+    }
+
+    .documentation-content .content {
+        font-size: 14px;
+    }
+
+    .tutorial-tooltip {
+        max-width: 250px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .documentation-content {
+        background: #1a1a1a;
+        color: #fff;
+    }
+
+    .documentation-header {
+        border-bottom-color: #333;
+    }
+
+    .documentation-header h1 {
+        color: #fff;
+    }
+
+    .search-input {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .search-input:focus {
+        border-color: #0A84FF;
+        box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
+    }
+
+    .search-button {
+        color: #999;
+    }
+
+    .search-button:hover {
+        color: #0A84FF;
+    }
+
+    .doc-section h2 {
+        color: #eee;
+    }
+
+    .doc-section .content {
+        color: #ccc;
+    }
+
+    .highlight {
+        background-color: #2c2c2c;
+        color: #fff;
+    }
+
+    .documentation-content h1 {
+        color: #fff;
+        border-bottom-color: #333;
+    }
+
+    .documentation-content h2 {
+        color: #eee;
+    }
+
+    .documentation-content .content {
+        color: #ccc;
+    }
+
+    .tutorial-tooltip {
+        background: #1a1a1a;
+        color: #fff;
+    }
+
+    .tutorial-tooltip h3 {
+        color: #fff;
+    }
+
+    .tutorial-tooltip p {
+        color: #ccc;
+    }
+
+    .tutorial-controls button {
+        background: #333;
+        color: #fff;
+    }
+
+    .tutorial-controls button:hover {
+        background: #444;
+    }
+
+    .level-indicator {
+        background: #1a1a1a;
+        color: #fff;
+    }
+
+    .level-indicator .level {
+        color: #fff;
+    }
+
+    .print-button {
+        color: #999;
+    }
+
+    .print-button:hover {
+        background: #333;
+        color: #fff;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .documentation-modal,
+    .documentation-modal * {
+        visibility: visible;
+    }
+
+    .documentation-modal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        background: none;
+        overflow: visible;
+    }
+
+    .documentation-content {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+        margin: 0;
+        box-shadow: none;
+        background: none;
+    }
+
+    .documentation-header {
+        border-bottom: 2px solid #000;
+        margin-bottom: 2em;
+        padding-bottom: 1em;
+    }
+
+    .documentation-header h1 {
+        font-size: 24pt;
+        color: #000;
+    }
+
+    .search-container,
+    .back-to-top,
+    .toc-toggle {
+        display: none !important;
+    }
+
+    .documentation-layout {
+        display: block;
+    }
+
+    .table-of-contents {
+        position: static;
+        background: none;
+        border: none;
+        padding: 0;
+        margin-bottom: 2em;
+        page-break-after: always;
+    }
+
+    .table-of-contents h3 {
+        font-size: 18pt;
+        color: #000;
+        border-bottom: 1px solid #000;
+    }
+
+    .table-of-contents ul {
+        list-style: decimal;
+        padding-left: 2em;
+    }
+
+    .table-of-contents li {
+        margin-bottom: 0.5em;
+    }
+
+    .table-of-contents .toc-link {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .table-of-contents .section-number {
+        display: none;
+    }
+
+    .progress-indicator {
+        display: none;
+    }
+
+    .documentation-sections {
+        margin-top: 2em;
+    }
+
+    .doc-section {
+        page-break-inside: avoid;
+        margin-bottom: 2em;
+    }
+
+    .doc-section h2 {
+        font-size: 16pt;
+        color: #000;
+        margin-bottom: 1em;
+    }
+
+    .doc-section .content {
+        font-size: 12pt;
+        color: #000;
+        line-height: 1.5;
+    }
+
+    .doc-section .section-number {
+        color: #000;
+    }
+
+    .highlight {
+        background: none;
+        border-bottom: 1px solid #000;
+    }
+
+    /* Add page numbers */
+    .doc-section::after {
+        content: counter(page);
+        counter-increment: page;
+        position: running(footer);
+    }
+
+    @page {
+        margin: 2cm;
+        @bottom-center {
+            content: counter(page);
+        }
+    }
+
+    /* Add URLs for links */
+    a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 90%;
+        color: #666;
+    }
+
+    /* Hide unnecessary elements */
+    .tutorial-tooltip,
+    .highlight-section {
+        display: none !important;
+    }
+}
+
+/* Print Options */
+.print-options {
+    position: relative;
+    display: inline-block;
+}
+
+.print-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 12px;
+    min-width: 200px;
+    display: none;
+    z-index: 1001;
+}
+
+.print-dropdown.visible {
+    display: block;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+.print-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    color: #333;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.print-dropdown button:hover {
+    background: #f0f0f0;
+}
+
+.print-quality-options {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.print-quality-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.print-quality-options label:hover {
+    background: #f0f0f0;
+}
+
+.print-quality-options input[type="radio"] {
+    margin: 0;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .print-dropdown {
+        background: #1a1a1a;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .print-dropdown button {
+        color: #fff;
+    }
+
+    .print-dropdown button:hover {
+        background: #333;
+    }
+
+    .print-quality-options {
+        border-top-color: #333;
+    }
+
+    .print-quality-options label {
+        color: #fff;
+    }
+
+    .print-quality-options label:hover {
+        background: #333;
+    }
+}
+
+/* Print Preview Styles */
+.print-preview {
+    background: white;
+    padding: 2cm;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 21cm;
+}
+
+.print-preview .print-quality-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .print-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 12px 12px 0 0;
+        padding: 16px;
+    }
+
+    .print-dropdown.visible {
+        animation: mobileDropdownSlideUp 0.3s ease;
+    }
+
+    @keyframes mobileDropdownSlideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+}
+
+/* Print Advanced Options */
+.print-advanced-options {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+
+.print-advanced-options h4 {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 12px 0;
+}
+
+/* Page Numbering Options */
+.page-numbering-options,
+.toc-options,
+.section-break-options,
+.column-options,
+.style-options,
+.export-options {
+    margin-bottom: 16px;
+}
+
+.page-number-settings,
+.toc-settings,
+.section-break-settings,
+.column-settings,
+.compression-settings {
+    margin-top: 8px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.page-number-settings select,
+.toc-settings select,
+.section-break-settings select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    margin-bottom: 8px;
+}
+
+.page-number-settings input[type="text"],
+.toc-settings input[type="number"],
+.column-settings input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+/* Style Options */
+.font-options,
+.color-options {
+    margin-bottom: 16px;
+}
+
+.font-options select,
+.font-size-options input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    margin-bottom: 8px;
+}
+
+.color-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.color-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-options input[type="color"] {
+    width: 40px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Export Options */
+.file-options {
+    margin-bottom: 16px;
+}
+
+.file-options input[type="text"],
+.file-options select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    margin-bottom: 8px;
+}
+
+.compression-settings input[type="range"] {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* Table of Contents Styles */
+.toc {
+    margin-bottom: 2em;
+    padding: 1em;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.toc h2 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.toc ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.toc li {
+    margin: 0.5em 0;
+    padding-left: 1em;
+    position: relative;
+}
+
+.toc li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #666;
+}
+
+.toc .page-number {
+    float: right;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Column Layout */
+.columns {
+    column-count: var(--column-count, 2);
+    column-gap: var(--column-gap, 12mm);
+    column-fill: var(--column-fill, balance);
+}
+
+/* Page Numbers */
+.page-number {
+    font-size: 10pt;
+    color: #666;
+}
+
+/* Section Breaks */
+section {
+    break-inside: avoid;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .print-advanced-options {
+        border-top-color: #333;
+    }
+
+    .print-advanced-options h4 {
+        color: #999;
+    }
+
+    .page-number-settings,
+    .toc-settings,
+    .section-break-settings,
+    .column-settings,
+    .compression-settings {
+        background: #2a2a2a;
+    }
+
+    .page-number-settings select,
+    .toc-settings select,
+    .section-break-settings select,
+    .font-options select,
+    .file-options select,
+    .page-number-settings input[type="text"],
+    .toc-settings input[type="number"],
+    .column-settings input[type="number"],
+    .font-size-options input[type="number"],
+    .file-options input[type="text"] {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #fff;
+    }
+
+    .toc {
+        background: #2a2a2a;
+    }
+
+    .toc h2 {
+        color: #fff;
+    }
+
+    .toc li::before {
+        color: #999;
+    }
+
+    .toc .page-number {
+        color: #999;
+    }
+
+    .page-number {
+        color: #999;
+    }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .print-advanced-options {
+        max-height: 60vh;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+
+    .color-options {
+        grid-template-columns: 1fr;
+    }
+
+    .toc {
+        margin: 1em 0;
+        padding: 0.8em;
+    }
+
+    .toc li {
+        font-size: 0.9em;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .toc {
+        background: none;
+        padding: 0;
+    }
+
+    .toc li::before {
+        color: #000;
+    }
+
+    .toc .page-number {
+        color: #000;
+    }
+
+    .page-number {
+        color: #000;
+    }
+
+    .columns {
+        column-count: var(--column-count, 1);
+    }
+} 

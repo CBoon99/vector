@@ -17,6 +17,7 @@
         <header id="header">
             <h1>Doppleit Vector v2 Pro</h1>
             <p id="tagline">Create and edit vector graphics right in your browser.</p>
+            <button id="header-help" class="button">Help</button>
         </header>
         <section id="upload-section">
             <div id="upload-area">
@@ -89,16 +90,23 @@
         </section>
         <section id="drawing-tools">
             <nav>
-                <button id="pen-tool" class="button active" title="Pen Tool (1)">Pen</button>
-                <button id="rect-tool" class="button" title="Rectangle Tool (2)">Rectangle</button>
-                <button id="circle-tool" class="button" title="Circle Tool (3)">Circle</button>
-                <button id="text-tool" class="button" title="Text Tool (4)">Text</button>
-                <button id="select-tool" class="button" title="Select Tool (S)">Select</button>
-                <button id="eyedropper-tool" class="button" title="Eyedropper">Eyedropper</button>
-                <button id="undo" class="button" title="Undo (Ctrl+Z)">Undo</button>
-                <button id="redo" class="button" title="Redo (Ctrl+Y)">Redo</button>
-                <button id="delete" class="button" title="Delete Selected">Delete</button>
-                <button id="clear-canvas" class="button" title="Clear Canvas">Clear</button>
+                <!-- Basic Tools (Available on Mobile) -->
+                <button id="pen-tool" class="button active" title="Pen Tool (1)" data-feature="basicDrawing">Pen</button>
+                <button id="rect-tool" class="button" title="Rectangle Tool (2)" data-feature="basicDrawing">Rectangle</button>
+                <button id="circle-tool" class="button" title="Circle Tool (3)" data-feature="basicDrawing">Circle</button>
+                <button id="select-tool" class="button" title="Select Tool (S)" data-feature="basicDrawing">Select</button>
+                
+                <!-- Advanced Tools (Desktop Only) -->
+                <button id="text-tool" class="button" title="Text Tool (4)" data-feature="advancedDrawing">Text</button>
+                <button id="bezier-tool" class="button" title="Bezier Tool (B)" data-feature="advancedDrawing">Bezier</button>
+                <button id="gradient-tool" class="button" title="Gradient Tool (G)" data-feature="advancedDrawing">Gradient</button>
+                <button id="eyedropper-tool" class="button" title="Eyedropper" data-feature="advancedDrawing">Eyedropper</button>
+                
+                <!-- Utility Tools -->
+                <button id="undo" class="button" title="Undo (Ctrl+Z)" data-feature="basicDrawing">Undo</button>
+                <button id="redo" class="button" title="Redo (Ctrl+Y)" data-feature="basicDrawing">Redo</button>
+                <button id="delete" class="button" title="Delete Selected" data-feature="basicDrawing">Delete</button>
+                <button id="clear-canvas" class="button" title="Clear Canvas" data-feature="basicDrawing">Clear</button>
             </nav>
         </section>
         <section id="canvas-section" class="hidden">
@@ -111,13 +119,13 @@
             </div>
             <div id="mobile-controls">
                 <div id="pinch-zoom-controls">
-                    <button id="zoom-in" class="button" title="Zoom In">Zoom In</button>
-                    <button id="zoom-out" class="button" title="Zoom Out">Zoom Out</button>
-                    <button id="reset-zoom" class="button" title="Reset Zoom">Reset View</button>
+                    <button id="zoom-in" class="button" title="Zoom In" data-feature="basicDrawing">Zoom In</button>
+                    <button id="zoom-out" class="button" title="Zoom Out" data-feature="basicDrawing">Zoom Out</button>
+                    <button id="reset-zoom" class="button" title="Reset Zoom" data-feature="basicDrawing">Reset View</button>
                 </div>
                 <div id="touch-controls">
-                    <button id="toggle-touch-drawing" class="button" title="Toggle Touch Drawing">Touch Drawing</button>
-                    <button id="touch-precision" class="button" title="Precision Mode">Precision Mode</button>
+                    <button id="toggle-touch-drawing" class="button" title="Toggle Touch Drawing" data-feature="basicDrawing">Touch Drawing</button>
+                    <button id="touch-precision" class="button hidden" title="Precision Mode" data-feature="basicDrawing">Precision Mode</button>
                 </div>
             </div>
             <div style="margin-top: 10px;">
@@ -132,12 +140,18 @@
                     <input type="text" id="filename" value="vectorized" aria-label="Export filename" pattern="^[a-zA-Z0-9_-]+$" />
                 </div>
                 <div class="control-group">
-                    <button id="export-svg" class="button">Export as SVG</button>
-                    <button id="export-png" class="button">Export as PNG</button>
+                    <!-- Basic Export -->
+                    <button id="export-png" class="button" data-feature="basicExport">Export as PNG</button>
+                    <button id="export-jpg" class="button" data-feature="basicExport">Export as JPG</button>
+                    
+                    <!-- Advanced Export -->
+                    <button id="export-svg" class="button" data-feature="advancedExport">Export as SVG</button>
+                    <button id="export-pdf" class="button" data-feature="advancedExport">Export as PDF</button>
+                    <button id="export-selection" class="button" data-feature="advancedExport">Export Selection</button>
                 </div>
                 <div class="control-group">
-                    <button id="save-project" class="button">Save Project</button>
-                    <button id="load-project" class="button">Load Project</button>
+                    <button id="save-project" class="button" data-feature="basicExport">Save Project</button>
+                    <button id="load-project" class="button" data-feature="basicExport">Load Project</button>
                     <input type="file" id="project-upload" accept=".json,.dopple" class="hidden" />
                 </div>
             </div>
@@ -166,16 +180,22 @@
         <section id="layer-section">
             <h3>Layers</h3>
             <div id="timeline" style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <button id="prev-version" class="button">Previous</button>
-                <button id="next-version" class="button">Next</button>
+                <button id="prev-version" class="button" data-feature="basicLayers">Previous</button>
+                <button id="next-version" class="button" data-feature="basicLayers">Next</button>
             </div>
             <div id="layer-list" style="max-height: 200px; overflow-y: auto;"></div>
             <div class="controls-grid">
                 <div class="control-group">
-                    <button id="add-layer" class="button">Add Layer</button>
-                    <button id="add-group" class="button">Add Group</button>
-                    <button id="toggle-layer-visibility" class="button">Toggle Visibility</button>
-                    <button id="toggle-layer-lock" class="button">Toggle Lock</button>
+                    <!-- Basic Layer Controls -->
+                    <button id="add-layer" class="button" data-feature="basicLayers">Add Layer</button>
+                    <button id="toggle-layer-visibility" class="button" data-feature="basicLayers">Toggle Visibility</button>
+                    <button id="toggle-layer-lock" class="button" data-feature="basicLayers">Toggle Lock</button>
+                    
+                    <!-- Advanced Layer Controls -->
+                    <button id="add-group" class="button" data-feature="layerEffects">Add Group</button>
+                    <button id="layer-mask" class="button" data-feature="layerEffects">Add Mask</button>
+                    <button id="layer-effects" class="button" data-feature="layerEffects">Effects</button>
+                    <button id="layer-blend" class="button" data-feature="layerEffects">Blend Mode</button>
                 </div>
             </div>
         </section>
@@ -199,6 +219,34 @@
                 </div>
             </div>
         </section>
+        <section id="advanced-tools" class="hidden">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <button id="path-union" class="button" data-feature="pathOperations">Union Paths</button>
+                    <button id="path-intersect" class="button" data-feature="pathOperations">Intersect Paths</button>
+                    <button id="path-difference" class="button" data-feature="pathOperations">Difference Paths</button>
+                    <button id="vectorize" class="button" data-feature="advancedDrawing">Vectorize Image</button>
+                </div>
+            </div>
+        </section>
+        <section id="collaboration" class="hidden">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <button id="share-project" class="button" data-feature="realtimeCollaboration">Share Project</button>
+                    <button id="invite-collaborators" class="button" data-feature="realtimeCollaboration">Invite Collaborators</button>
+                    <button id="view-history" class="button" data-feature="realtimeCollaboration">View History</button>
+                </div>
+            </div>
+        </section>
+        <section id="plugins" class="hidden">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <button id="plugin-manager" class="button" data-feature="pluginSystem">Plugin Manager</button>
+                    <button id="install-plugin" class="button" data-feature="pluginSystem">Install Plugin</button>
+                    <button id="plugin-settings" class="button" data-feature="pluginSystem">Plugin Settings</button>
+                </div>
+            </div>
+        </section>
         <div id="preview-window" class="hidden"></div>
         <div id="debug-panel" style="display: none;">
             <h3>Debug Panel</h3>
@@ -215,6 +263,7 @@
             <p><strong>UX:</strong> Hold Shift for uniform scale, Alt to duplicate, drag guides from rulers.</p>
             <p><strong>Shortcuts:</strong> Undo (Ctrl+Z), Redo (Ctrl+Y), Delete (Del), Escape to deselect, Tools (1-4, S).</p>
             <p><strong>Mobile:</strong> Use pinch gestures to zoom, precision mode for detailed work.</p>
+            <p><strong>Feedback:</strong> Love it? Found a bug? <a href="https://x.com/yourprofile" target="_blank">DM me on X!</a></p>
             <button id="close-help" class="button">Close</button>
         </div>
         <div id="autosave-notification" style="display: none;">Project autosaved</div>
@@ -226,5 +275,5 @@
 
     <!-- Scripts -->
     <script type="module" src="src/js/app.js" nonce="doppleit"></script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d46a201e35b0f1',t:'MTc0NjgyNzQ0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

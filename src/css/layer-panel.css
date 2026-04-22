@@ -1,0 +1,188 @@
+/* Layer Panel Styles */
+.layer-panel {
+    width: 250px;
+    background: #f5f5f5;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.layer-header {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.layer-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.layer-actions button {
+    padding: 5px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.layer-actions button:hover {
+    background-color: #e0e0e0;
+}
+
+.layer-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.layer-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.layer-item {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.layer-item:hover {
+    background-color: #e0e0e0;
+}
+
+.layer-item.selected {
+    background-color: #e3f2fd;
+}
+
+.layer-item.locked {
+    opacity: 0.7;
+}
+
+.layer-item.hidden {
+    opacity: 0.5;
+}
+
+.layer-controls {
+    display: flex;
+    gap: 5px;
+    margin-right: 5px;
+}
+
+.layer-controls button {
+    padding: 2px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.layer-controls button:hover {
+    opacity: 1;
+}
+
+.layer-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.layer-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.group-indicator {
+    font-size: 14px;
+}
+
+.layer-properties {
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.layer-properties input,
+.layer-properties select {
+    width: 100%;
+    margin-bottom: 5px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Drag and drop styles */
+.layer-item.dragging {
+    opacity: 0.5;
+}
+
+.layer-item.drag-over-top {
+    border-top: 2px solid #2196f3;
+}
+
+.layer-item.drag-over-bottom {
+    border-bottom: 2px solid #2196f3;
+}
+
+/* Layer actions */
+.layer-actions-group {
+    display: flex;
+    gap: 5px;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.layer-actions-group button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: #2196f3;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.layer-actions-group button:hover {
+    background: #1976d2;
+}
+
+.layer-actions-group button:disabled {
+    background: #bdbdbd;
+    cursor: not-allowed;
+}
+
+/* Layer Group Styles */
+.layer-group {
+    margin-left: 16px;
+}
+
+.layer-group-header {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.layer-group-content {
+    margin-left: 16px;
+}
+
+/* Layer Icons */
+.layer-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+} 

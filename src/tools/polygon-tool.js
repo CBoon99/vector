@@ -67,47 +67,55 @@ class PolygonTool {
     // Shape Drawing
     drawShape(context) {
         if (!this.currentShape) return;
+        if (!context) {
+            console.warn('Invalid canvas context provided to drawShape');
+            return;
+        }
 
-        context.save();
-        context.beginPath();
-        
-        const { center, sides, radius, starRatio, rotation, isStar } = this.currentShape;
-        const angleStep = (Math.PI * 2) / sides;
-        
-        // Calculate points
-        const points = [];
-        for (let i = 0; i < sides; i++) {
-            const angle = rotation + i * angleStep;
-            const r = isStar && i % 2 === 1 ? radius * starRatio : radius;
+        try {
+            context.save();
+            context.beginPath();
             
-            points.push({
-                x: center.x + Math.cos(angle) * r,
-                y: center.y + Math.sin(angle) * r
-            });
+            const { center, sides, radius, starRatio, rotation, isStar } = this.currentShape;
+            const angleStep = (Math.PI * 2) / sides;
+            
+            // Calculate points
+            const points = [];
+            for (let i = 0; i < sides; i++) {
+                const angle = rotation + i * angleStep;
+                const r = isStar && i % 2 === 1 ? radius * starRatio : radius;
+                
+                points.push({
+                    x: center.x + Math.cos(angle) * r,
+                    y: center.y + Math.sin(angle) * r
+                });
+            }
+            
+            // Draw shape
+            context.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                context.lineTo(points[i].x, points[i].y);
+            }
+            context.closePath();
+            
+            // Apply styles
+            context.strokeStyle = this.currentShape.stroke;
+            context.lineWidth = this.currentShape.strokeWidth;
+            context.setLineDash(
+                this.currentShape.strokeStyle === 'dashed' ? [5, 5] :
+                this.currentShape.strokeStyle === 'dotted' ? [2, 2] : []
+            );
+            context.stroke();
+            
+            if (this.currentShape.fill !== 'transparent') {
+                context.fillStyle = this.currentShape.fill;
+                context.fill();
+            }
+        } catch (error) {
+            console.error('Error drawing shape:', error);
+        } finally {
+            context.restore();
         }
-        
-        // Draw shape
-        context.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            context.lineTo(points[i].x, points[i].y);
-        }
-        context.closePath();
-        
-        // Apply styles
-        context.strokeStyle = this.currentShape.stroke;
-        context.lineWidth = this.currentShape.strokeWidth;
-        context.setLineDash(
-            this.currentShape.strokeStyle === 'dashed' ? [5, 5] :
-            this.currentShape.strokeStyle === 'dotted' ? [2, 2] : []
-        );
-        context.stroke();
-        
-        if (this.currentShape.fill !== 'transparent') {
-            context.fillStyle = this.currentShape.fill;
-            context.fill();
-        }
-        
-        context.restore();
     }
 
     // Shape Manipulation
@@ -125,14 +133,28 @@ class PolygonTool {
 
     // Utility Methods
     getCanvasPoint(event, canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        return {
-            x: (event.clientX - rect.left) * scaleX,
-            y: (event.clientY - rect.top) * scaleY
-        };
+        if (!event || !canvas) {
+            console.warn('Invalid event or canvas provided to getCanvasPoint');
+            return { x: 0, y: 0 };
+        }
+
+        try {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            // Validate event coordinates
+            const x = typeof event.clientX === 'number' ? event.clientX : 0;
+            const y = typeof event.clientY === 'number' ? event.clientY : 0;
+            
+            return {
+                x: (x - rect.left) * scaleX,
+                y: (y - rect.top) * scaleY
+            };
+        } catch (error) {
+            console.error('Error calculating canvas point:', error);
+            return { x: 0, y: 0 };
+        }
     }
 
     // Tool Options
@@ -142,6 +164,26 @@ class PolygonTool {
 
     setOption(option, value) {
         if (this.options.hasOwnProperty(option)) {
+            // Validate values before setting
+            switch (option) {
+                case 'sides':
+                    value = Math.max(3, Math.min(20, Math.floor(value)));
+                    break;
+                case 'radius':
+                    value = Math.max(1, value);
+                    break;
+                case 'starRatio':
+                    value = Math.max(0.1, Math.min(0.9, value));
+                    break;
+                case 'strokeWidth':
+                    value = Math.max(0.5, value);
+                    break;
+                case 'strokeStyle':
+                    if (!['solid', 'dashed', 'dotted'].includes(value)) {
+                        value = 'solid';
+                    }
+                    break;
+            }
             this.options[option] = value;
             return true;
         }
@@ -156,14 +198,69 @@ class PolygonTool {
     }
 
     loadState(state) {
-        if (state.options) {
-            this.options = { ...state.options };
+        if (!state || !state.options) {
+            console.warn('Invalid state provided to loadState');
+            return;
+        }
+
+        try {
+            const validOptions = {};
+            Object.entries(this.options).forEach(([key, defaultValue]) => {
+                const value = state.options[key];
+                if (value !== undefined) {
+                    // Validate each option value
+                    switch (key) {
+                        case 'sides':
+                            validOptions[key] = Math.max(3, Math.min(20, Math.floor(value)));
+                            break;
+                        case 'radius':
+                            validOptions[key] = Math.max(1, value);
+                            break;
+                        case 'starRatio':
+                            validOptions[key] = Math.max(0.1, Math.min(0.9, value));
+                            break;
+                        case 'strokeWidth':
+                            validOptions[key] = Math.max(0.5, value);
+                            break;
+                        case 'strokeStyle':
+                            validOptions[key] = ['solid', 'dashed', 'dotted'].includes(value) ? value : 'solid';
+                            break;
+                        default:
+                            validOptions[key] = value;
+                    }
+                } else {
+                    validOptions[key] = defaultValue;
+                }
+            });
+            this.options = validOptions;
+        } catch (error) {
+            console.error('Error loading state:', error);
+            // Reset to default options
+            this.options = {
+                sides: 5,
+                radius: 50,
+                starRatio: 0.5,
+                rotation: 0,
+                strokeWidth: 1,
+                strokeStyle: 'solid',
+                fill: 'transparent',
+                isStar: false
+            };
         }
     }
 
     // Tool Interface
     getCursor() {
         return 'crosshair';
+    }
+
+    cancelDrawing() {
+        if (this.currentShape) {
+            this.currentShape = null;
+            if (this.layerManager) {
+                this.layerManager.removeObject(this.currentShape);
+            }
+        }
     }
 }
 
