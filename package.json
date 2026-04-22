@@ -17,6 +17,14 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CBoon99/vector-dp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CBoon99/vector-dp/issues"
+  },
+  "homepage": "https://doppleit-vector.netlify.app/",
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
