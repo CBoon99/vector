@@ -72,6 +72,18 @@ class ToolFeedback {
         const progressMessage = `${message} ${Math.round(progress * 100)}%`;
         this.show(progressMessage, 0); // Don't auto-hide
     }
+
+    setCurrentTool(_tool) {
+        /* reserved for tool name / status display */
+    }
+
+    cleanup() {
+        this.hide();
+        if (this.feedbackElement?.parentNode) {
+            this.feedbackElement.remove();
+        }
+        this.feedbackElement = null;
+    }
 }
 
 export default ToolFeedback; 

@@ -29,4 +29,8 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
-.cache/ 
+.cache/
+
+# Local legacy dump; README in this folder is tracked
+old-doc/*
+!old-doc/README.md

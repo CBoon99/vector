@@ -1,5 +1,7 @@
 import { ErrorHandler, FileError } from '../utils/errorHandler.js';
-import UIService from './uiService.js';
+import { generateId } from '../utils/id-generator.js';
+import { cellularVectorizeFromImage } from './cellularVectorize.js';
+import VectorizationService from './vectorizationService.js';
 
 class FileImportService {
     constructor() {
@@ -22,17 +24,65 @@ class FileImportService {
         };
 
         this.maxFileSize = 50 * 1024 * 1024; // 50MB
+        /** @type {Record<string, unknown>} */
+        this._importOptions = {};
     }
 
-    async importFile(file) {
+    getMimeType(file) {
+        let t = (file.type || '').toLowerCase();
+        if (t) {
+            return t;
+        }
+        const name = (file.name || '').toLowerCase();
+        if (name.endsWith('.png')) {
+            return 'image/png';
+        }
+        if (name.endsWith('.jpg') || name.endsWith('.jpeg')) {
+            return 'image/jpeg';
+        }
+        if (name.endsWith('.gif')) {
+            return 'image/gif';
+        }
+        if (name.endsWith('.webp')) {
+            return 'image/webp';
+        }
+        if (name.endsWith('.svg')) {
+            return 'image/svg+xml';
+        }
+        if (name.endsWith('.bmp')) {
+            return 'image/bmp';
+        }
+        if (name.endsWith('.tif') || name.endsWith('.tiff')) {
+            return 'image/tiff';
+        }
+        return '';
+    }
+
+    /**
+     * @param {File} file
+     * @param {{ cellPoster?: boolean, rasterOnly?: boolean, quality?: 'low' | 'medium' | 'high', cellSize?: number }} [options]
+     */
+    async importFile(file, options = {}) {
+        this._importOptions = options || {};
         try {
+            const mime = this.getMimeType(file);
+            file = this._withType(file, mime);
             await this.validateFile(file);
             const processor = this.getFileProcessor(file);
             return await processor(file);
         } catch (error) {
             ErrorHandler.handle(error, 'FileImportService.importFile');
             throw error;
+        } finally {
+            this._importOptions = {};
         }
+    }
+
+    _withType(file, mime) {
+        if (file.type || !mime) {
+            return file;
+        }
+        return new File([file], file.name, { type: mime, lastModified: file.lastModified });
     }
 
     async validateFile(file) {
@@ -44,9 +94,9 @@ class FileImportService {
             throw new FileError(`File size exceeds maximum limit of ${this.maxFileSize / (1024 * 1024)}MB`);
         }
 
-        const fileType = file.type.toLowerCase();
+        const fileType = (file.type || this.getMimeType(file) || '').toLowerCase();
         const isSupported = Object.keys(this.supportedFormats.vector).includes(fileType) ||
-                          Object.keys(this.supportedFormats.raster).includes(fileType);
+            Object.keys(this.supportedFormats.raster).includes(fileType);
 
         if (!isSupported) {
             throw new FileError('Unsupported file type');
@@ -54,10 +104,14 @@ class FileImportService {
     }
 
     getFileProcessor(file) {
-        const fileType = file.type.toLowerCase();
-        return this.supportedFormats.vector[fileType] || 
-               this.supportedFormats.raster[fileType] ||
-               (() => { throw new FileError('No processor available for this file type'); });
+        const fileType = (file.type || this.getMimeType(file) || '').toLowerCase();
+        return (
+            this.supportedFormats.vector[fileType] ||
+            this.supportedFormats.raster[fileType] ||
+            (() => {
+                throw new FileError('No processor available for this file type');
+            })
+        );
     }
 
     async processSVG(file) {
@@ -106,13 +160,53 @@ class FileImportService {
     }
 
     async processRaster(file) {
-        try {
-            const image = await this.loadImage(file);
-            const vectorObjects = await this.vectorizeImage(image);
-            return vectorObjects;
-        } catch (error) {
-            throw new FileError('Failed to process raster image');
+        const opts = this._importOptions || {};
+        const image = await this.loadImage(file);
+        if (opts.rasterOnly) {
+            const nw = image.naturalWidth || image.width;
+            const nh = image.naturalHeight || image.height;
+            if (!nw || !nh) {
+                return [];
+            }
+            const maxW = 800;
+            const maxH = 600;
+            let w = nw;
+            let h = nh;
+            if (w > maxW || h > maxH) {
+                const s = Math.min(maxW / w, maxH / h, 1);
+                w = Math.max(1, Math.floor(w * s));
+                h = Math.max(1, Math.floor(h * s));
+            }
+            return [
+                {
+                    type: 'raster',
+                    id: generateId('raster'),
+                    x: 0,
+                    y: 0,
+                    width: w,
+                    height: h,
+                    image
+                }
+            ];
         }
+        if (opts.cellPoster) {
+            return cellularVectorizeFromImage(image, {
+                maxSide: 120,
+                cellSize: opts.cellSize || 10
+            });
+        }
+        try {
+            const traced = await VectorizationService.vectorizeImage(
+                image,
+                opts.quality || 'medium'
+            );
+            if (traced && traced.length) {
+                return traced;
+            }
+        } catch (e) {
+            /* fall through to cell poster */
+        }
+        return cellularVectorizeFromImage(image, { maxSide: 100, cellSize: 10 });
     }
 
     async loadImage(file) {
@@ -129,16 +223,6 @@ class FileImportService {
             reader.onerror = () => reject(new FileError('Failed to read file'));
             reader.readAsDataURL(file);
         });
-    }
-
-    async vectorizeImage(image) {
-        // TODO: Implement image vectorization
-        // This would use a combination of:
-        // 1. Edge detection
-        // 2. Path tracing
-        // 3. Shape recognition
-        // 4. Color quantization
-        throw new FileError('Image vectorization not yet implemented');
     }
 
     extractVectorObjects(svgDoc) {
@@ -306,7 +390,7 @@ class FileImportService {
         const transforms = transformString.trim().split(/\)\s+/);
 
         transforms.forEach(t => {
-            const [type, ...values] = t.split(/[\(\s,]+/);
+            const [type, ...values] = t.split(/[(\s,]+/);
             const nums = values.map(Number);
 
             switch (type) {

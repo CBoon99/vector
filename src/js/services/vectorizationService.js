@@ -1,4 +1,5 @@
 import { ErrorHandler, DrawingError } from '../utils/errorHandler.js';
+import { generateId } from '../utils/id-generator.js';
 import capabilityService from './capabilityService.js';
 
 class VectorizationService {
@@ -11,9 +12,9 @@ class VectorizationService {
                 colorQuantization: 8
             },
             medium: {
-                edgeThreshold: 20,
-                minPathLength: 5,
-                simplifyTolerance: 1,
+                edgeThreshold: 24,
+                minPathLength: 2,
+                simplifyTolerance: 1.5,
                 colorQuantization: 16
             },
             high: {
@@ -55,20 +56,26 @@ class VectorizationService {
             const settings = this.getOptimizedSettings(quality);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
-            // Set canvas size to match image
-            canvas.width = image.width;
-            canvas.height = image.height;
-            
-            // Draw image to canvas
-            ctx.drawImage(image, 0, 0);
-            
-            // Get image data
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            
-            // Process image data with optimized settings
+            if (!ctx) {
+                throw new DrawingError('Canvas 2D not available for vectorization');
+            }
+
+            let w = image.naturalWidth || image.width || 1;
+            let h = image.naturalHeight || image.height || 1;
+            const maxEdge = 200;
+            if (Math.max(w, h) > maxEdge) {
+                const s = maxEdge / Math.max(w, h);
+                w = Math.max(1, Math.floor(w * s));
+                h = Math.max(1, Math.floor(h * s));
+            }
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(image, 0, 0, w, h);
+
+            const imageData = ctx.getImageData(0, 0, w, h);
+
             const edges = await this.detectEdges(imageData, settings);
-            const paths = await this.tracePaths(edges, settings);
+            const paths = await this.tracePaths(edges, w, h, settings);
             const shapes = await this.detectShapes(paths, settings);
             const colors = await this.quantizeColors(imageData, settings);
             
@@ -132,40 +139,11 @@ class VectorizationService {
             }
         }
 
-        // Apply non-maximum suppression
-        const suppressed = new Uint8ClampedArray(width * height);
-        for (let y = 1; y < height - 1; y++) {
-            for (let x = 1; x < width - 1; x++) {
-                const idx = y * width + x;
-                const angle = Math.atan2(gy, gx) * 180 / Math.PI;
-                const normalizedAngle = ((angle + 180) % 180) / 45;
-                const roundedAngle = Math.round(normalizedAngle) * 45;
-
-                let neighbors = [];
-                switch (roundedAngle) {
-                    case 0:
-                        neighbors = [edges[idx - 1], edges[idx + 1]];
-                        break;
-                    case 45:
-                        neighbors = [edges[(y - 1) * width + (x + 1)], edges[(y + 1) * width + (x - 1)]];
-                        break;
-                    case 90:
-                        neighbors = [edges[(y - 1) * width + x], edges[(y + 1) * width + x]];
-                        break;
-                    case 135:
-                        neighbors = [edges[(y - 1) * width + (x - 1)], edges[(y + 1) * width + (x + 1)]];
-                        break;
-                }
-
-                suppressed[idx] = edges[idx] >= Math.max(...neighbors) ? edges[idx] : 0;
-            }
-        }
-
-        return suppressed;
+        // NMS removed: prior implementation used out-of-scope gx/gy. Raw Sobel edges are sufficient for path tracing.
+        return edges;
     }
 
-    async tracePaths(edges, settings) {
-        const { width, height } = edges;
+    async tracePaths(edges, width, height, settings) {
         const visited = new Set();
         const paths = [];
 
@@ -426,6 +404,10 @@ class VectorizationService {
         // Calculate rotation angle
         const angle = Math.atan2(covXY, lambda1 - covYY);
 
+        if (majorAxis < 2 || minorAxis < 2) {
+            return null;
+        }
+
         return {
             type: 'ellipse',
             cx: centerX,
@@ -479,12 +461,15 @@ class VectorizationService {
         const objects = [];
 
         for (const shape of shapes) {
+            const baseFill =
+                shape.type === 'path' ? 'none' : (this.findDominantColor(shape, colors) || '#555555');
             const object = {
                 ...shape,
-                fill: this.findDominantColor(shape, colors),
+                id: generateId('vec'),
+                fill: baseFill,
                 stroke: {
-                    color: '#000000',
-                    width: 1
+                    color: shape.type === 'path' ? '#111111' : '#000000',
+                    width: shape.type === 'path' ? 1 : 1
                 }
             };
             objects.push(object);

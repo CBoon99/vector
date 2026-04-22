@@ -11,7 +11,8 @@ export class TextTool extends Tool {
         this.textBox = null;
     }
 
-    initialize() {
+    initialize(layerManager, stateManager) {
+        super.initialize(layerManager, stateManager);
         this.setupEventListeners();
     }
 

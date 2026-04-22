@@ -5,12 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self'; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-doppleit'; style-src 'self' 'nonce-doppleit' https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self'">
-    <meta name="description" content="Create and edit vector graphics with Doppleit Vector v2 Pro. Fast, in-browser processing.">
-    <meta name="keywords" content="vector editor, SVG converter, Doppleit Vector">
-    <title>Doppleit Vector v2 Pro</title>
+    <title>Doppleit Vector — Free in-browser vector editor, SVG &amp; image tools</title>
+    <meta name="description" content="Doppleit Vector is a free, client-side web app to draw, import images (JPG, PNG, WebP, SVG), vectorize with edge trace or cell poster, paint pixels, manage layers, and export. Runs in your browser with JavaScript. Open source.">
+    <meta name="keywords" content="vector editor, free vector graphics, browser vector editor, SVG editor online, in-browser design tool, Doppleit Vector, image to vector, lightweight illustrator alternative, web canvas, vanilla JavaScript">
+    <meta name="author" content="Carl Boon" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <link rel="canonical" href="https://doppleit-vector.netlify.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Doppleit Vector" />
+    <meta property="og:title" content="Doppleit Vector — Free in-browser vector editor" />
+    <meta property="og:description" content="Draw and edit vector-style graphics, import images, optional trace vectorization, pixel paint on bitmaps, layers, and export. Runs entirely in the browser. Open source on GitHub." />
+    <meta property="og:url" content="https://doppleit-vector.netlify.app/" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Doppleit Vector — Free in-browser vector editor" />
+    <meta name="twitter:description" content="Client-side vector graphics demo: import, vectorize, pixel edit, layers, export. No install." />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90' font-family='Inter' fill='%23e37800'%3ED%3C/text%3E%3C/svg%3E" />
     <link rel="stylesheet" href="src/css/styles.css" />
+    <script type="application/ld+json" nonce="doppleit">
+    {"@context":"https://schema.org","@type":"WebApplication","name":"Doppleit Vector","description":"In-browser vector graphics editor with import, vectorization, layers, and export.","url":"https://doppleit-vector.netlify.app/","applicationCategory":"DesignApplication","operatingSystem":"Web browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"codeRepository":"https://github.com/CBoon99/vector","author":{"@type":"Person","name":"Carl Boon"}}
+    </script>
 </head>
 <body>
     <div id="app">
@@ -21,7 +37,12 @@
         </header>
         <section id="upload-section">
             <div id="upload-area">
-                <p>Drag and drop your image or project file here (JPG, PNG, SVG, JSON, DOPPLE)</p>
+                <p>Drag and drop an image (JPG, PNG, WebP&hellip;) or <strong>SVG</strong>. Trace vectorization runs by default; use options below to change behaviour.</p>
+                <div class="import-options">
+                    <label class="import-option"><input type="checkbox" id="import-raster-only" /> Bitmap only (no vectorization, best for pixel paint)</label>
+                    <label class="import-option"><input type="checkbox" id="import-cell-poster" /> Cell poster only (fast blocks, skip edge trace)</label>
+                </div>
+                <p class="hint">After a <em>Bitmap only</em> import, pick <strong>Pixel</strong> in the toolbar and draw on the image with the current HEX color.</p>
                 <button id="browse-button" class="button">Browse Files</button>
                 <input type="file" id="file-upload" accept="image/jpeg,image/png,image/svg+xml,application/json,.dopple" class="hidden" />
                 <p id="upload-instructions" class="hidden"></p>
@@ -107,9 +128,14 @@
                 <button id="redo" class="button" title="Redo (Ctrl+Y)" data-feature="basicDrawing">Redo</button>
                 <button id="delete" class="button" title="Delete Selected" data-feature="basicDrawing">Delete</button>
                 <button id="clear-canvas" class="button" title="Clear Canvas" data-feature="basicDrawing">Clear</button>
+                <button id="pixel-tool" class="button" type="button" data-tool="pixel-tool" title="Pixel paint (on bitmap import)">Pixel</button>
             </nav>
         </section>
-        <section id="canvas-section" class="hidden">
+        <section id="future-roadmap" class="demo-future" aria-label="Planned features">
+            <h2 class="demo-future__title">Future functionality (stubs)</h2>
+            <p>Effects, blend modes, PDF/AI import, real-time collab, and 3D are scaffolded in services but not wired in this demo.</p>
+        </section>
+        <section id="canvas-section">
             <div class="canvas-container">
                 <div id="ruler-top" class="ruler ruler-horizontal"></div>
                 <div id="ruler-left" class="ruler ruler-vertical"></div>
@@ -133,7 +159,7 @@
                 <input type="checkbox" id="snap-grid" checked />
             </div>
         </section>
-        <section id="export-section" class="hidden">
+        <section id="export-section">
             <div class="controls-grid">
                 <div class="control-group">
                     <label for="filename">Filename</label>
@@ -270,10 +296,6 @@
         <div id="tooltip" style="display: none;"></div>
     </div>
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="src/css/styles.css" />
-
-    <!-- Scripts -->
     <script type="module" src="src/js/app.js" nonce="doppleit"></script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d46a201e35b0f1',t:'MTc0NjgyNzQ0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

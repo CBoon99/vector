@@ -21,6 +21,7 @@ import DeviceService from './services/deviceService.js';
 import FileService from './services/fileService.js';
 import RasterizationService from './services/rasterizationService.js';
 import FileImportService from './services/fileImportService.js';
+import * as pixelEdit from './services/pixelEditService.js';
 import VectorizationService from './services/vectorizationService.js';
 import ExportService from './services/exportService.js';
 import DocumentationService from './services/documentationService.js';
@@ -29,13 +30,15 @@ import SmartShapeTool from './tools/smart-shape-tool.js';
 import SmartConstraintsTool from './tools/smart-constraints-tool.js';
 
 class App {
-    constructor() {
+    constructor(canvasElement) {
         // Initialize environment manager early
         EnvironmentManager.init();
         
         this.stateManager = new StateManager();
         this.layerManager = new LayerManager();
-        this.canvasManager = new CanvasManager();
+        this.canvasManager = new CanvasManager(
+            canvasElement || document.getElementById('drawing-canvas')
+        );
         this.toolFeedback = new ToolFeedback();
         this.onboarding = new Onboarding();
         this.tools = new Map();
@@ -55,6 +58,11 @@ class App {
 
         // Initialize features based on environment
         this.initializeFeatures();
+
+        const canvasSection = document.getElementById('canvas-section');
+        if (canvasSection) {
+            canvasSection.classList.remove('hidden');
+        }
     }
 
     initializeServices() {
@@ -94,6 +102,20 @@ class App {
         this.initializeShapeTool();
         this.initializeToolbar();
         this.initializeEditControls();
+    }
+
+    initializeColorPicker() {
+        /* Optional color wheel: UI may add listeners later */
+    }
+
+    initializeSettings() {
+        /* Placeholder for settings panel */
+    }
+
+    initializeExport() {
+        if (document.getElementById('export-svg')) {
+            this.initializeExportControls();
+        }
     }
 
     initializeDeviceFeatures() {
@@ -215,10 +237,15 @@ class App {
     setupHelpModalListeners() {
         const helpModal = document.getElementById('help-modal');
         const closeHelp = document.getElementById('close-help');
+        if (!helpModal) {
+            return;
+        }
 
-        closeHelp.addEventListener('click', () => {
-            UIService.hideModal('help-modal');
-        });
+        if (closeHelp) {
+            closeHelp.addEventListener('click', () => {
+                UIService.hideModal('help-modal');
+            });
+        }
 
         window.addEventListener('click', (e) => {
             if (e.target === helpModal) {
@@ -241,22 +268,68 @@ class App {
 
     setupDocumentationListeners() {
         const documentationButton = document.getElementById('show-documentation');
-        documentationButton.addEventListener('click', () => {
-            this.documentationService.showDocumentation();
-        });
+        if (documentationButton) {
+            documentationButton.addEventListener('click', () => {
+                this.documentationService.showDocumentation();
+            });
+        }
     }
 
-    async handleFiles(files) {
-        try {
-            for (const file of files) {
-                const vectorObjects = await FileImportService.importFile(file);
-                if (vectorObjects) {
-                    this.layerManager.addObjects(vectorObjects);
+    async handleFiles(fileList) {
+        if (!fileList || !fileList.length) {
+            return;
+        }
+        for (const file of fileList) {
+            try {
+                const result = await FileImportService.importFile(file, {
+                    cellPoster: document.getElementById('import-cell-poster')?.checked,
+                    rasterOnly: document.getElementById('import-raster-only')?.checked
+                });
+                const list = Array.isArray(result) ? result : result ? [result] : [];
+                if (list.length) {
+                    this.layerManager.addObjects(list);
                     this.canvasManager.draw();
+                    this.showImageUploadFeedback(file);
+                    UIService.showMessage('Added to canvas', 'success');
+                } else {
+                    UIService.showMessage('No drawable content in file', 'info');
+                }
+            } catch (error) {
+                ErrorHandler.handle(error, 'handleFiles');
+            }
+        }
+    }
+
+    showImageUploadFeedback(file) {
+        if (!file) {
+            return;
+        }
+        const type = String(file.type || '');
+        const name = (file.name || '').toLowerCase();
+        const isRasterBitmap =
+            (type.startsWith('image/') && !type.includes('svg')) ||
+            /\.(png|jpe?g|gif|webp|bmp|tiff?)$/i.test(name);
+        if (!isRasterBitmap) {
+            return;
+        }
+        const thumb = document.getElementById('thumbnail-preview');
+        if (thumb) {
+            if (thumb.dataset.objectUrl) {
+                try {
+                    URL.revokeObjectURL(thumb.dataset.objectUrl);
+                } catch (_) {
+                    /* ignore */
                 }
             }
-        } catch (error) {
-            ErrorHandler.handle(error, 'handleFiles');
+            const objectUrl = URL.createObjectURL(file);
+            thumb.dataset.objectUrl = objectUrl;
+            thumb.src = objectUrl;
+            thumb.classList.remove('hidden');
+        }
+        const ok = document.getElementById('confirmation-message');
+        if (ok) {
+            ok.classList.remove('hidden');
+            setTimeout(() => ok.classList.add('hidden'), 2500);
         }
     }
 
@@ -277,9 +350,25 @@ class App {
         }
     }
 
+    getStrokeColor() {
+        const h = document.getElementById('hex-input')?.value?.trim() || '#111111';
+        return h.startsWith('#') ? h : `#${h}`;
+    }
+
     handleDrawStart(point) {
         try {
-            // Apply smart constraints to the point
+            if (this.stateManager.currentTool === 'pixel-tool') {
+                const obj = pixelEdit.findRasterUnderPoint(
+                    this.layerManager.getLayers(),
+                    point.x,
+                    point.y
+                );
+                if (obj) {
+                    pixelEdit.paintPixelOnRaster(obj, point.x, point.y, this.getStrokeColor());
+                    this.canvasManager.draw();
+                }
+                return;
+            }
             const constrainedPoint = this.smartConstraints.applyConstraints(point);
             this.stateManager.startDrawing(constrainedPoint);
             this.canvasManager.draw();
@@ -290,7 +379,18 @@ class App {
 
     handleDraw(point) {
         try {
-            // Apply smart constraints to the point
+            if (this.stateManager.currentTool === 'pixel-tool') {
+                const obj = pixelEdit.findRasterUnderPoint(
+                    this.layerManager.getLayers(),
+                    point.x,
+                    point.y
+                );
+                if (obj) {
+                    pixelEdit.paintPixelOnRaster(obj, point.x, point.y, this.getStrokeColor());
+                    this.canvasManager.draw();
+                }
+                return;
+            }
             const constrainedPoint = this.smartConstraints.applyConstraints(point);
             this.stateManager.updateDrawing(constrainedPoint);
             this.canvasManager.draw();
@@ -301,6 +401,9 @@ class App {
 
     handleDrawEnd(point) {
         try {
+            if (this.stateManager.currentTool === 'pixel-tool') {
+                return;
+            }
             this.stateManager.finishDrawing(point);
             this.canvasManager.draw();
         } catch (error) {
@@ -332,8 +435,11 @@ class App {
     }
 
     updateToolAvailability(features) {
+        if (!Array.isArray(features)) {
+            return;
+        }
         const toolButtons = document.querySelectorAll('#drawing-tools button');
-        toolButtons.forEach(button => {
+        toolButtons.forEach((button) => {
             const feature = button.dataset.feature;
             if (feature && !features.includes(feature)) {
                 button.disabled = true;
@@ -660,22 +766,30 @@ class App {
 
     initializeTools() {
         this.tools = {
-            select: new SelectionTool(this.layerManager, this.stateManager),
-            rectangle: new RectangleTool(this.layerManager, this.stateManager),
-            circle: new CircleTool(this.layerManager, this.stateManager),
-            polygon: new PolygonTool(this.layerManager, this.stateManager),
-            bezier: new BezierTool(this.layerManager, this.stateManager),
-            text: new TextTool(this.layerManager, this.stateManager),
-            smartShape: new SmartShapeTool(this.layerManager, this.stateManager),
+            select: new SelectionTool(this.stateManager, this.layerManager),
+            rectangle: new RectangleTool(),
+            circle: new CircleTool(),
+            polygon: new PolygonTool(this.stateManager, this.layerManager),
+            bezier: new BezierTool(this.stateManager, this.layerManager),
+            text: new TextTool(this.stateManager, this.layerManager),
+            smartShape: new SmartShapeTool(),
             smartConstraints: new SmartConstraintsTool()
         };
         this.currentTool = this.tools.select;
+        Object.values(this.tools).forEach((tool) => {
+            if (tool && typeof tool.initialize === 'function') {
+                tool.initialize(this.layerManager, this.stateManager);
+            }
+        });
     }
 
     setCurrentTool(toolName) {
-        const tool = this.tools.get(toolName);
+        if (!this.tools) {
+            return;
+        }
+        const tool = this.tools[toolName];
         if (tool) {
-            if (this.currentTool) {
+            if (this.currentTool && typeof this.currentTool.cleanup === 'function') {
                 this.currentTool.cleanup();
             }
             this.currentTool = tool;
@@ -692,23 +806,26 @@ class App {
     }
 
     cleanup() {
-        // Clean up event listeners
-        document.removeEventListener('keydown', this.handleKeyDown);
-        this.canvasManager.canvas.removeEventListener('mousedown', this.handleMouseDown);
-        this.canvasManager.canvas.removeEventListener('mousemove', this.handleMouseMove);
-        this.canvasManager.canvas.removeEventListener('mouseup', this.handleMouseUp);
-        this.canvasManager.canvas.removeEventListener('mouseleave', this.handleMouseLeave);
-        this.canvasManager.canvas.removeEventListener('touchstart', this.handleTouchStart);
-        this.canvasManager.canvas.removeEventListener('touchmove', this.handleTouchMove);
-        this.canvasManager.canvas.removeEventListener('touchend', this.handleTouchEnd);
+        if (typeof this.handleKeyDown === 'function') {
+            document.removeEventListener('keydown', this.handleKeyDown);
+        }
+        /* Canvas listeners are bound in CanvasManager; removed via canvasManager.cleanup() if needed */
 
-        // Clean up tools
-        this.tools.forEach(tool => tool.cleanup());
+        if (this.tools) {
+            Object.values(this.tools).forEach((tool) => {
+                if (tool && typeof tool.cleanup === 'function') {
+                    tool.cleanup();
+                }
+            });
+        }
 
-        // Clean up UI components
         this.toolFeedback.cleanup();
-        this.onboarding.cleanup();
-        this.smartConstraints.cleanup();
+        if (this.onboarding && typeof this.onboarding.cleanup === 'function') {
+            this.onboarding.cleanup();
+        }
+        if (this.smartConstraints && typeof this.smartConstraints.cleanup === 'function') {
+            this.smartConstraints.cleanup();
+        }
     }
 
     initializeFeatures() {
@@ -853,3 +970,18 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+function bootstrapDoppleitApp() {
+    const canvas = document.getElementById('drawing-canvas');
+    if (!canvas) {
+        console.error('Doppleit: #drawing-canvas not found');
+        return;
+    }
+    window.doppleitApp = new App(canvas);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapDoppleitApp);
+} else {
+    bootstrapDoppleitApp();
+}

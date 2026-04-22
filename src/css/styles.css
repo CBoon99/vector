@@ -26,12 +26,12 @@
 
 /* Base layout */
 #app {
-    max-width: 1200px;
+    max-width: min(1200px, 100%);
     margin: 0 auto;
-    padding: 20px;
+    padding: clamp(10px, 3vw, 20px);
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: clamp(12px, 2vw, 20px);
 }
 
 /* Header */
@@ -1338,4 +1338,76 @@ body {
     50% {
         box-shadow: 0 0 30px rgba(0, 122, 204, 1);
     }
-} 
+}
+
+/* —— Demo: import & roadmap —— */
+.import-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin: 0.75rem 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.import-option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+#upload-section .hint {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0;
+    max-width: 42rem;
+}
+
+.demo-future {
+    padding: 1rem 1.25rem;
+    border: 1px dashed rgba(227, 120, 0, 0.45);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 0.9rem;
+    max-width: 100%;
+}
+
+.demo-future__title {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+    color: var(--primary-color);
+}
+
+#drawing-tools nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+#drawing-tools .button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.4rem 0.75rem;
+}
+
+#canvas-section {
+    width: 100%;
+}
+
+#mobile-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+@media (max-width: 600px) {
+    #header {
+        text-align: left;
+    }
+
+    .controls-grid {
+        grid-template-columns: 1fr;
+    }
+}

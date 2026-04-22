@@ -238,6 +238,14 @@ class Onboarding {
                 break;
         }
     }
+
+    cleanup() {
+        this.stop();
+        this.overlay?.remove();
+        this.tooltip?.remove();
+        this.overlay = null;
+        this.tooltip = null;
+    }
 }
 
 export default Onboarding; 

@@ -1,35 +1,26 @@
 export class CanvasManager {
     constructor(canvas) {
-        this.canvas = canvas;
-        
-        // Initialize WebGL context with optimized settings
-        this.gl = canvas.getContext('webgl2', {
-            alpha: true,
-            antialias: false, // Disable antialiasing for better performance
-            depth: false,
-            stencil: false,
-            desynchronized: true,
-            powerPreference: 'high-performance',
-            preserveDrawingBuffer: false // Disable preserve drawing buffer for better performance
-        });
-        
-        // Fallback to 2D if WebGL not available
-        if (!this.gl) {
-            console.warn('WebGL2 not available, falling back to 2D canvas');
-            this.ctx = canvas.getContext('2d', {
-                alpha: true,
-                desynchronized: true,
-                willReadFrequently: false
-            });
-            this.useWebGL = false;
-        } else {
-            this.useWebGL = true;
-            this.initializeWebGL();
+        this.canvas = canvas || document.getElementById('drawing-canvas');
+        if (!this.canvas) {
+            throw new Error('CanvasManager: no canvas element');
         }
 
-        // Initialize Web Worker
-        this.worker = new Worker(new URL('./canvasWorker.js', import.meta.url));
-        this.worker.onmessage = this.handleWorkerMessage.bind(this);
+        // 2D pipeline: app layers (vector + raster) render via onDrawLayers; WebGL path skips user content
+        this.ctx = this.canvas.getContext('2d', {
+            alpha: true,
+            desynchronized: true,
+            willReadFrequently: false
+        });
+        this.gl = null;
+        this.useWebGL = false;
+
+        try {
+            this.worker = new Worker(new URL('./canvasWorker.js', import.meta.url));
+            this.worker.onmessage = this.handleWorkerMessage.bind(this);
+        } catch (e) {
+            console.warn('Canvas worker unavailable:', e);
+            this.worker = null;
+        }
 
         this.scale = 1;
         this.offsetX = 0;
@@ -62,7 +53,7 @@ export class CanvasManager {
 
         // Add frame skipping for better performance
         this.frameSkip = 0;
-        this.maxFrameSkip = 2;
+        this.maxFrameSkip = 0;
 
         // Add object pooling for better memory management
         this.objectPool = {
@@ -154,6 +145,7 @@ export class CanvasManager {
         this.onDrawStart = null;
         this.onDraw = null;
         this.onDrawEnd = null;
+        this.onDrawLayers = null;
         this.onZoom = null;
         this.onPan = null;
 
@@ -769,15 +761,17 @@ export class CanvasManager {
         this.bufferCtx.translate(this.offsetX, this.offsetY);
         this.bufferCtx.scale(this.scale, this.scale);
 
-        // Draw grid
         this.drawGrid();
 
-        // Draw visible layers
-        for (const id of this.visibleLayers) {
-            if (this.dirtyLayers.has(id)) {
-                this.updateLayerCache(id);
+        if (this.onDrawLayers) {
+            this.onDrawLayers(this.bufferCtx);
+        } else {
+            for (const id of this.visibleLayers) {
+                if (this.dirtyLayers.has(id)) {
+                    this.updateLayerCache(id);
+                }
+                this.drawLayer(id);
             }
-            this.drawLayer(id);
         }
 
         // Restore context state
@@ -1086,12 +1080,19 @@ export class CanvasManager {
         };
     }
 
-    setDrawHandlers({ onDrawStart, onDraw, onDrawEnd, onZoom, onPan }) {
+    setDrawHandlers({ onDrawStart, onDraw, onDrawEnd, onZoom, onPan, onDrawLayers }) {
         this.onDrawStart = onDrawStart;
         this.onDraw = onDraw;
         this.onDrawEnd = onDrawEnd;
         this.onZoom = onZoom;
         this.onPan = onPan;
+        this.onDrawLayers = onDrawLayers;
+    }
+
+    setZoom(zoom) {
+        const z = Math.max(0.1, Math.min(10, Number(zoom) || 1));
+        this.scale = z;
+        this.scheduleDraw();
     }
 
     scheduleDraw() {
@@ -1120,27 +1121,25 @@ export class CanvasManager {
     }
 
     drawGrid() {
+        const g = this.bufferCtx;
+        if (!g) return;
         const gridSize = 20;
         const width = this.canvas.width / this.scale;
         const height = this.canvas.height / this.scale;
 
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = '#e0e0e0';
-        this.ctx.lineWidth = 0.5;
+        g.beginPath();
+        g.strokeStyle = '#e8e8e8';
+        g.lineWidth = 0.5;
 
-        // Draw vertical lines
         for (let x = 0; x <= width; x += gridSize) {
-            this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, height);
+            g.moveTo(x, 0);
+            g.lineTo(x, height);
         }
-
-        // Draw horizontal lines
         for (let y = 0; y <= height; y += gridSize) {
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(width, y);
+            g.moveTo(0, y);
+            g.lineTo(width, y);
         }
-
-        this.ctx.stroke();
+        g.stroke();
     }
 
     drawObjects() {

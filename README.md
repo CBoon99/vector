@@ -1,6 +1,24 @@
-# DoppleIt Vector
+# Doppleit Vector
 
-A modern, feature-rich vector graphics editor built with vanilla JavaScript. Create, edit, and export vector graphics with ease.
+**Repository:** [github.com/CBoon99/vector](https://github.com/CBoon99/vector) · **Live demo:** [doppleit-vector.netlify.app](https://doppleit-vector.netlify.app)
+
+An open-source, **in-browser vector graphics editor** built with **vanilla JavaScript** (no React/Vue). Draw with basic tools, **import** PNG, JPG, WebP, or SVG, optionally **vectorize** images (Sobel edge trace with cell-poster fallback), **paint individual pixels** on bitmap imports, use a **layer list**, zoom/pan on the canvas, and **export** (where wired). Built as a learning project—experimental, not a full replacement for Illustrator or Figma.
+
+### Quick start
+
+| Command | Purpose |
+|--------|---------|
+| `npm install` | Install dependencies |
+| `npm run dev` | Local static server (`server.js`, port 3000) |
+| `npm run build` | Webpack production build → `dist/` |
+| `npm test` | Jest smoke test |
+| `npm run lint` | ESLint on core demo files |
+
+**Try the app:** run `npm run dev`, open the URL shown, then **Browse** or drag an image. Default import runs **edge tracing**; if that yields little, **cell poster** fills in. Check **Bitmap only** to keep a raster, then choose **Pixel** and the **HEX** color to edit pixels. See `old-doc/README.md` for optional local legacy files (folder is gitignored except that README).
+
+### SEO & discovery
+
+The app ships with `meta` description/keywords, Open Graph / Twitter tags, `canonical` URL, JSON-LD `WebApplication` schema in `index.html`, and `public/robots.txt` + `public/sitemap.xml` (copied to `dist/` on build). Point the **canonical** and sitemap **loc** to your real host if you deploy somewhere other than Netlify.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/your-netlify-badge-id/deploy-status)](https://app.netlify.com/sites/doppleit-vector/deploys)
 

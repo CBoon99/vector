@@ -2,6 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const ROOT = process.cwd();
+
 const PORT = 3000;
 
 const MIME_TYPES = {
@@ -25,8 +27,13 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
     console.log(`${req.method} ${req.url}`);
 
+    if (req.url.includes('..')) {
+        res.writeHead(400);
+        res.end('Invalid path');
+        return;
+    }
     // Handle root URL
-    let filePath = req.url === '/' ? './index.html' : '.' + req.url;
+    let filePath = req.url === '/' ? path.join(ROOT, 'index.html') : path.join(ROOT, req.url.split('?')[0]);
 
     const extname = String(path.extname(filePath)).toLowerCase();
     const contentType = MIME_TYPES[extname] || 'application/octet-stream';

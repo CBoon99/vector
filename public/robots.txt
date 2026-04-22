@@ -1,4 +1,6 @@
+# https://doppleit-vector.netlify.app — Doppleit Vector
 User-agent: *
 Allow: /
 
-Sitemap: https://your-site-name.netlify.app/sitemap.xml 
+# If you use GitHub Pages or another host, set Sitemap to the absolute URL of sitemap.xml on that domain.
+Sitemap: https://doppleit-vector.netlify.app/sitemap.xml

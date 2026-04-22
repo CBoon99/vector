@@ -1,1 +1,0 @@
-This is a small file used to test connection speed. The file size is intentionally small to minimize impact on user data usage while still providing an accurate speed measurement. 
