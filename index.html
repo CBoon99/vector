@@ -10,7 +10,7 @@
     <meta name="keywords" content="vector editor, free vector graphics, browser vector editor, SVG editor online, in-browser design tool, Doppleit Vector, image to vector, lightweight illustrator alternative, web canvas, vanilla JavaScript">
     <meta name="author" content="Carl Boon" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="theme-color" content="#0c0c0e" />
     <link rel="canonical" href="https://doppleit-vector.netlify.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Doppleit Vector" />
@@ -21,281 +21,293 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Doppleit Vector — Free in-browser vector editor" />
     <meta name="twitter:description" content="Client-side vector graphics demo: import, vectorize, pixel edit, layers, export. No install." />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90' font-family='Inter' fill='%23e37800'%3ED%3C/text%3E%3C/svg%3E" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90' font-family='DM%20Sans' fill='%23e8913a'%3ED%3C/text%3E%3C/svg%3E" />
     <link rel="stylesheet" href="src/css/styles.css" />
+    <link rel="stylesheet" href="src/css/app-shell.css" />
     <script type="application/ld+json" nonce="doppleit">
     {"@context":"https://schema.org","@type":"WebApplication","name":"Doppleit Vector","description":"In-browser vector graphics editor with import, vectorization, layers, and export.","url":"https://doppleit-vector.netlify.app/","applicationCategory":"DesignApplication","operatingSystem":"Web browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"codeRepository":"https://github.com/CBoon99/vector","author":{"@type":"Person","name":"Carl Boon"}}
     </script>
 </head>
 <body>
     <div id="app">
-        <header id="header">
-            <h1>Doppleit Vector v2 Pro</h1>
-            <p id="tagline">Create and edit vector graphics right in your browser.</p>
-            <button id="header-help" class="button">Help</button>
+        <header class="app-header" id="header">
+            <div class="app-header__brand">
+                <span class="app-header__logo" aria-hidden="true">DV</span>
+                <div>
+                    <h1 class="app-header__title">Doppleit Vector</h1>
+                    <p id="tagline" class="app-header__tagline">Create and edit vector graphics in your browser.</p>
+                </div>
+            </div>
+            <button type="button" id="header-help" class="button">Help</button>
         </header>
-        <section id="upload-section">
-            <div id="upload-area">
-                <p>Drag and drop an image (JPG, PNG, WebP&hellip;) or <strong>SVG</strong>. Trace vectorization runs by default; use options below to change behaviour.</p>
-                <div class="import-options">
-                    <label class="import-option"><input type="checkbox" id="import-raster-only" /> Bitmap only (no vectorization, best for pixel paint)</label>
-                    <label class="import-option"><input type="checkbox" id="import-cell-poster" /> Cell poster only (fast blocks, skip edge trace)</label>
+
+        <div class="app-workspace">
+            <aside class="app-rail app-rail--left" aria-label="Import and color">
+                <div class="app-rail__scroll">
+                    <section id="upload-section">
+                        <div id="upload-area">
+                            <p>Drag and drop an image (JPG, PNG, WebP&hellip;) or <strong>SVG</strong>. Trace vectorization runs by default; use options below to change behaviour.</p>
+                            <div class="import-options">
+                                <label class="import-option"><input type="checkbox" id="import-raster-only" /> Bitmap only (no vectorization, best for pixel paint)</label>
+                                <label class="import-option"><input type="checkbox" id="import-cell-poster" /> Cell poster only (fast blocks, skip edge trace)</label>
+                            </div>
+                            <p class="hint">After a <em>Bitmap only</em> import, pick <strong>Pixel</strong> in the toolbar and draw on the image with the current HEX color.</p>
+                            <button type="button" id="browse-button" class="button">Browse files</button>
+                            <input type="file" id="file-upload" accept="image/jpeg,image/png,image/svg+xml,application/json,.dopple" class="hidden" />
+                            <p id="upload-instructions" class="hidden"></p>
+                            <div id="progress-bar" class="hidden">
+                                <div id="progress-fill"></div>
+                            </div>
+                            <p id="loading-message" class="hidden">Processing... <span class="loader"></span></p>
+                            <p id="error-message" class="hidden"></p>
+                            <p id="confirmation-message" class="hidden">File processed successfully!</p>
+                            <div id="file-preview" class="hidden">
+                                <canvas id="preview-canvas" width="200" height="200"></canvas>
+                                <button type="button" id="add-preview" class="button">Add to canvas</button>
+                            </div>
+                            <img id="thumbnail-preview" class="hidden" alt="Uploaded image thumbnail" />
+                        </div>
+                    </section>
+                    <section id="controls-section">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label for="color-wheel">Color picker</label>
+                                <canvas id="color-wheel" width="100" height="100"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <label for="lightness-slider">Lightness: <span id="lightness-value">50%</span></label>
+                                <input type="range" id="lightness-slider" min="0" max="100" value="50" aria-valuenow="50" aria-label="Lightness" />
+                            </div>
+                            <div class="control-group">
+                                <label for="opacity-slider">Opacity: <span id="opacity-value">100%</span></label>
+                                <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Opacity" />
+                            </div>
+                            <div class="control-group">
+                                <label for="stroke-width-slider">Stroke width: <span id="stroke-width-value">1px</span></label>
+                                <input type="range" id="stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Stroke width" />
+                            </div>
+                            <div class="control-group">
+                                <label for="stroke-style">Stroke style</label>
+                                <select id="stroke-style">
+                                    <option value="solid">Solid</option>
+                                    <option value="dashed">Dashed</option>
+                                    <option value="dotted">Dotted</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label for="hex-input">HEX</label>
+                                <input type="text" id="hex-input" maxlength="7" value="#e37800" aria-label="HEX color input" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="rgb-input">RGB</label>
+                                <input type="text" id="rgb-input" value="227,120,0" aria-label="RGB color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="hsl-input">HSL</label>
+                                <input type="text" id="hsl-input" value="32,100%,44%" aria-label="HSL color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="native-picker">System color</label>
+                                <input type="color" id="native-picker" value="#e37800" aria-label="System color picker" />
+                                <button type="button" id="system-picker" class="button">Open system picker</button>
+                            </div>
+                            <div class="control-group">
+                                <label for="fill-toggle">Fill shape</label>
+                                <input type="checkbox" id="fill-toggle" checked aria-label="Toggle fill" />
+                            </div>
+                        </div>
+                        <div id="swatches"></div>
+                    </section>
+                    <section id="future-roadmap" class="demo-future" aria-label="Planned features">
+                        <h2 class="demo-future__title">Future functionality (stubs)</h2>
+                        <p>Effects, blend modes, PDF/AI import, real-time collab, and 3D are scaffolded in services but not wired in this demo.</p>
+                    </section>
                 </div>
-                <p class="hint">After a <em>Bitmap only</em> import, pick <strong>Pixel</strong> in the toolbar and draw on the image with the current HEX color.</p>
-                <button id="browse-button" class="button">Browse Files</button>
-                <input type="file" id="file-upload" accept="image/jpeg,image/png,image/svg+xml,application/json,.dopple" class="hidden" />
-                <p id="upload-instructions" class="hidden"></p>
-                <div id="progress-bar" class="hidden">
-                    <div id="progress-fill"></div>
-                </div>
-                <p id="loading-message" class="hidden">Processing... <span class="loader"></span></p>
-                <p id="error-message" class="hidden"></p>
-                <p id="confirmation-message" class="hidden">File processed successfully!</p>
-                <div id="file-preview" class="hidden">
-                    <canvas id="preview-canvas" width="200" height="200"></canvas>
-                    <button id="add-preview" class="button">Add to Canvas</button>
-                </div>
-                <img id="thumbnail-preview" class="hidden" alt="Uploaded image thumbnail" />
+            </aside>
+
+            <div class="app-stage">
+                <section id="drawing-tools" aria-label="Tools">
+                    <nav>
+                        <button type="button" id="pen-tool" class="button active" title="Pen Tool (1)" data-feature="basicDrawing">Pen</button>
+                        <button type="button" id="rect-tool" class="button" title="Rectangle Tool (2)" data-feature="basicDrawing">Rectangle</button>
+                        <button type="button" id="circle-tool" class="button" title="Circle Tool (3)" data-feature="basicDrawing">Circle</button>
+                        <button type="button" id="select-tool" class="button" title="Select Tool (S)" data-feature="basicDrawing">Select</button>
+                        <button type="button" id="text-tool" class="button" title="Text Tool (4)" data-feature="advancedDrawing">Text</button>
+                        <button type="button" id="bezier-tool" class="button" title="Bezier Tool (B)" data-feature="advancedDrawing">Bezier</button>
+                        <button type="button" id="gradient-tool" class="button" title="Gradient Tool (G)" data-feature="advancedDrawing">Gradient</button>
+                        <button type="button" id="eyedropper-tool" class="button" title="Eyedropper" data-feature="advancedDrawing">Eyedropper</button>
+                        <button type="button" id="undo" class="button" title="Undo (Ctrl+Z)" data-feature="basicDrawing">Undo</button>
+                        <button type="button" id="redo" class="button" title="Redo (Ctrl+Y)" data-feature="basicDrawing">Redo</button>
+                        <button type="button" id="delete" class="button" title="Delete selected" data-feature="basicDrawing">Delete</button>
+                        <button type="button" id="clear-canvas" class="button" title="Clear canvas" data-feature="basicDrawing">Clear</button>
+                        <button type="button" id="pixel-tool" class="button" data-tool="pixel-tool" title="Pixel paint (on bitmap import)">Pixel</button>
+                    </nav>
+                </section>
+                <div id="tool-controls" class="tool-controls-host" aria-live="polite"></div>
+                <section id="canvas-section" aria-label="Canvas">
+                    <div class="canvas-container">
+                        <div id="ruler-top" class="ruler ruler-horizontal"></div>
+                        <div id="ruler-left" class="ruler ruler-vertical"></div>
+                        <svg id="grid" class="hidden"></svg>
+                        <canvas id="drawing-canvas" width="800" height="600"></canvas>
+                        <input type="text" id="text-input" class="hidden" placeholder="Enter text" />
+                    </div>
+                    <div id="mobile-controls">
+                        <div id="pinch-zoom-controls">
+                            <button type="button" id="zoom-in" class="button" title="Zoom in" data-feature="basicDrawing">Zoom in</button>
+                            <button type="button" id="zoom-out" class="button" title="Zoom out" data-feature="basicDrawing">Zoom out</button>
+                            <button type="button" id="reset-zoom" class="button" title="Reset zoom" data-feature="basicDrawing">Reset view</button>
+                        </div>
+                        <div id="touch-controls">
+                            <button type="button" id="toggle-touch-drawing" class="button" title="Touch drawing" data-feature="basicDrawing">Touch drawing</button>
+                            <button type="button" id="touch-precision" class="button hidden" title="Precision mode" data-feature="basicDrawing">Precision</button>
+                        </div>
+                    </div>
+                    <div class="snap-row">
+                        <label for="snap-grid">Snap to grid</label>
+                        <input type="checkbox" id="snap-grid" checked />
+                    </div>
+                </section>
             </div>
-        </section>
-        <section id="controls-section">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <label for="color-wheel">Color Picker</label>
-                    <canvas id="color-wheel" width="100" height="100"></canvas>
+
+            <aside class="app-rail app-rail--right" aria-label="Export, layers, settings">
+                <div class="app-rail__scroll">
+                    <section id="export-section">
+                        <div class="controls-grid">
+                            <div class="control-group control-group--filename">
+                                <label for="filename">Filename</label>
+                                <input type="text" id="filename" value="vectorized" aria-label="Export filename" pattern="^[a-zA-Z0-9_-]+$" />
+                            </div>
+                            <div class="control-group">
+                                <button type="button" id="export-png" class="button" data-feature="basicExport">PNG</button>
+                                <button type="button" id="export-jpg" class="button" data-feature="basicExport">JPEG</button>
+                                <button type="button" id="export-svg" class="button" data-feature="advancedExport">SVG</button>
+                                <button type="button" id="export-pdf" class="button" data-feature="advancedExport">PDF</button>
+                                <button type="button" id="export-selection" class="button" data-feature="advancedExport">Selection</button>
+                            </div>
+                            <div class="control-group">
+                                <button type="button" id="save-project" class="button" data-feature="basicExport">Save project</button>
+                                <button type="button" id="load-project" class="button" data-feature="basicExport">Load project</button>
+                                <input type="file" id="project-upload" accept=".json,.dopple" class="hidden" />
+                            </div>
+                        </div>
+                    </section>
+                    <section id="properties-section" class="hidden">
+                        <h3>Object properties</h3>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label for="fill-color-input">Fill (HEX)</label>
+                                <input type="text" id="fill-color-input" maxlength="7" aria-label="Object fill color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="stroke-color-input">Stroke (HEX)</label>
+                                <input type="text" id="stroke-color-input" maxlength="7" aria-label="Object stroke color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="object-opacity-slider">Opacity</label>
+                                <input type="range" id="object-opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Object opacity" />
+                            </div>
+                            <div class="control-group">
+                                <label for="object-stroke-width-slider">Stroke width</label>
+                                <input type="range" id="object-stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Object stroke width" />
+                            </div>
+                        </div>
+                    </section>
+                    <section id="layer-section">
+                        <h3>Layers</h3>
+                        <div id="timeline" class="layer-timeline">
+                            <button type="button" id="prev-version" class="button" data-feature="basicLayers">Previous</button>
+                            <button type="button" id="next-version" class="button" data-feature="basicLayers">Next</button>
+                        </div>
+                        <div id="layer-list"></div>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="add-layer" class="button" data-feature="basicLayers">Add layer</button>
+                                <button type="button" id="toggle-layer-visibility" class="button" data-feature="basicLayers">Visibility</button>
+                                <button type="button" id="toggle-layer-lock" class="button" data-feature="basicLayers">Lock</button>
+                                <button type="button" id="add-group" class="button" data-feature="layerEffects">Group</button>
+                                <button type="button" id="layer-mask" class="button" data-feature="layerEffects">Mask</button>
+                                <button type="button" id="layer-effects" class="button" data-feature="layerEffects">Effects</button>
+                                <button type="button" id="layer-blend" class="button" data-feature="layerEffects">Blend</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="settings-section">
+                        <h3>Settings</h3>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="theme-toggle" class="button">Theme</button>
+                                <button type="button" id="high-contrast-toggle" class="button">High contrast</button>
+                                <button type="button" id="reset-session" class="button">Reset session</button>
+                            </div>
+                            <div class="control-group control-group--settings-toggles">
+                                <button type="button" id="debug-toggle" class="button">Debug</button>
+                                <button type="button" id="help-toggle" class="button">Help</button>
+                                <label for="autosave-toggle">
+                                    <input type="checkbox" id="autosave-toggle" checked /> Autosave
+                                </label>
+                                <label for="shortcuts-toggle">
+                                    <input type="checkbox" id="shortcuts-toggle" checked /> Shortcuts
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="advanced-tools" class="hidden">
+                        <h3>Vector ops</h3>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="path-union" class="button" data-feature="pathOperations">Union</button>
+                                <button type="button" id="path-intersect" class="button" data-feature="pathOperations">Intersect</button>
+                                <button type="button" id="path-difference" class="button" data-feature="pathOperations">Difference</button>
+                                <button type="button" id="vectorize" class="button" data-feature="advancedDrawing">Vectorize</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="collaboration" class="hidden">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="share-project" class="button" data-feature="realtimeCollaboration">Share</button>
+                                <button type="button" id="invite-collaborators" class="button" data-feature="realtimeCollaboration">Invite</button>
+                                <button type="button" id="view-history" class="button" data-feature="realtimeCollaboration">History</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="plugins" class="hidden">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="plugin-manager" class="button" data-feature="pluginSystem">Plugins</button>
+                                <button type="button" id="install-plugin" class="button" data-feature="pluginSystem">Install</button>
+                                <button type="button" id="plugin-settings" class="button" data-feature="pluginSystem">Settings</button>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-                <div class="control-group">
-                    <label for="lightness-slider">Lightness: <span id="lightness-value">50%</span></label>
-                    <input type="range" id="lightness-slider" min="0" max="100" value="50" aria-valuenow="50" aria-label="Lightness" />
-                </div>
-                <div class="control-group">
-                    <label for="opacity-slider">Opacity: <span id="opacity-value">100%</span></label>
-                    <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Opacity" />
-                </div>
-                <div class="control-group">
-                    <label for="stroke-width-slider">Stroke Width: <span id="stroke-width-value">1px</span></label>
-                    <input type="range" id="stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Stroke Width" />
-                </div>
-                <div class="control-group">
-                    <label for="stroke-style">Stroke Style</label>
-                    <select id="stroke-style">
-                        <option value="solid">Solid</option>
-                        <option value="dashed">Dashed</option>
-                        <option value="dotted">Dotted</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label for="hex-input">HEX</label>
-                    <input type="text" id="hex-input" maxlength="7" value="#e37800" aria-label="HEX color input" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
-                </div>
-                <div class="control-group">
-                    <label for="rgb-input">RGB</label>
-                    <input type="text" id="rgb-input" value="227,120,0" aria-label="RGB color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$" />
-                </div>
-                <div class="control-group">
-                    <label for="hsl-input">HSL</label>
-                    <input type="text" id="hsl-input" value="32,100%,44%" aria-label="HSL color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*$" />
-                </div>
-                <div class="control-group">
-                    <label for="native-picker">System Color Picker</label>
-                    <input type="color" id="native-picker" value="#e37800" aria-label="System color picker" />
-                    <button id="system-picker" class="button">Open System Picker</button>
-                </div>
-                <div class="control-group">
-                    <label for="fill-toggle">Fill Shape</label>
-                    <input type="checkbox" id="fill-toggle" checked aria-label="Toggle fill" />
-                </div>
-            </div>
-            <div id="swatches" style="margin-top: 20px;"></div>
-        </section>
-        <section id="drawing-tools">
-            <nav>
-                <!-- Basic Tools (Available on Mobile) -->
-                <button id="pen-tool" class="button active" title="Pen Tool (1)" data-feature="basicDrawing">Pen</button>
-                <button id="rect-tool" class="button" title="Rectangle Tool (2)" data-feature="basicDrawing">Rectangle</button>
-                <button id="circle-tool" class="button" title="Circle Tool (3)" data-feature="basicDrawing">Circle</button>
-                <button id="select-tool" class="button" title="Select Tool (S)" data-feature="basicDrawing">Select</button>
-                
-                <!-- Advanced Tools (Desktop Only) -->
-                <button id="text-tool" class="button" title="Text Tool (4)" data-feature="advancedDrawing">Text</button>
-                <button id="bezier-tool" class="button" title="Bezier Tool (B)" data-feature="advancedDrawing">Bezier</button>
-                <button id="gradient-tool" class="button" title="Gradient Tool (G)" data-feature="advancedDrawing">Gradient</button>
-                <button id="eyedropper-tool" class="button" title="Eyedropper" data-feature="advancedDrawing">Eyedropper</button>
-                
-                <!-- Utility Tools -->
-                <button id="undo" class="button" title="Undo (Ctrl+Z)" data-feature="basicDrawing">Undo</button>
-                <button id="redo" class="button" title="Redo (Ctrl+Y)" data-feature="basicDrawing">Redo</button>
-                <button id="delete" class="button" title="Delete Selected" data-feature="basicDrawing">Delete</button>
-                <button id="clear-canvas" class="button" title="Clear Canvas" data-feature="basicDrawing">Clear</button>
-                <button id="pixel-tool" class="button" type="button" data-tool="pixel-tool" title="Pixel paint (on bitmap import)">Pixel</button>
-            </nav>
-        </section>
-        <section id="future-roadmap" class="demo-future" aria-label="Planned features">
-            <h2 class="demo-future__title">Future functionality (stubs)</h2>
-            <p>Effects, blend modes, PDF/AI import, real-time collab, and 3D are scaffolded in services but not wired in this demo.</p>
-        </section>
-        <section id="canvas-section">
-            <div class="canvas-container">
-                <div id="ruler-top" class="ruler ruler-horizontal"></div>
-                <div id="ruler-left" class="ruler ruler-vertical"></div>
-                <svg id="grid" class="hidden"></svg>
-                <canvas id="drawing-canvas" width="800" height="600"></canvas>
-                <input type="text" id="text-input" class="hidden" placeholder="Enter text" />
-            </div>
-            <div id="mobile-controls">
-                <div id="pinch-zoom-controls">
-                    <button id="zoom-in" class="button" title="Zoom In" data-feature="basicDrawing">Zoom In</button>
-                    <button id="zoom-out" class="button" title="Zoom Out" data-feature="basicDrawing">Zoom Out</button>
-                    <button id="reset-zoom" class="button" title="Reset Zoom" data-feature="basicDrawing">Reset View</button>
-                </div>
-                <div id="touch-controls">
-                    <button id="toggle-touch-drawing" class="button" title="Toggle Touch Drawing" data-feature="basicDrawing">Touch Drawing</button>
-                    <button id="touch-precision" class="button hidden" title="Precision Mode" data-feature="basicDrawing">Precision Mode</button>
-                </div>
-            </div>
-            <div style="margin-top: 10px;">
-                <label for="snap-grid">Snap to Grid</label>
-                <input type="checkbox" id="snap-grid" checked />
-            </div>
-        </section>
-        <section id="export-section">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <label for="filename">Filename</label>
-                    <input type="text" id="filename" value="vectorized" aria-label="Export filename" pattern="^[a-zA-Z0-9_-]+$" />
-                </div>
-                <div class="control-group">
-                    <!-- Basic Export -->
-                    <button id="export-png" class="button" data-feature="basicExport">Export as PNG</button>
-                    <button id="export-jpg" class="button" data-feature="basicExport">Export as JPG</button>
-                    
-                    <!-- Advanced Export -->
-                    <button id="export-svg" class="button" data-feature="advancedExport">Export as SVG</button>
-                    <button id="export-pdf" class="button" data-feature="advancedExport">Export as PDF</button>
-                    <button id="export-selection" class="button" data-feature="advancedExport">Export Selection</button>
-                </div>
-                <div class="control-group">
-                    <button id="save-project" class="button" data-feature="basicExport">Save Project</button>
-                    <button id="load-project" class="button" data-feature="basicExport">Load Project</button>
-                    <input type="file" id="project-upload" accept=".json,.dopple" class="hidden" />
-                </div>
-            </div>
-        </section>
-        <section id="properties-section" class="hidden">
-            <h3>Object Properties</h3>
-            <div class="controls-grid">
-                <div class="control-group">
-                    <label for="fill-color-input">Fill Color (HEX)</label>
-                    <input type="text" id="fill-color-input" maxlength="7" aria-label="Object fill color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
-                </div>
-                <div class="control-group">
-                    <label for="stroke-color-input">Stroke Color (HEX)</label>
-                    <input type="text" id="stroke-color-input" maxlength="7" aria-label="Object stroke color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
-                </div>
-                <div class="control-group">
-                    <label for="object-opacity-slider">Opacity</label>
-                    <input type="range" id="object-opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Object opacity" />
-                </div>
-                <div class="control-group">
-                    <label for="object-stroke-width-slider">Stroke Width</label>
-                    <input type="range" id="object-stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Object stroke width" />
-                </div>
-            </div>
-        </section>
-        <section id="layer-section">
-            <h3>Layers</h3>
-            <div id="timeline" style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <button id="prev-version" class="button" data-feature="basicLayers">Previous</button>
-                <button id="next-version" class="button" data-feature="basicLayers">Next</button>
-            </div>
-            <div id="layer-list" style="max-height: 200px; overflow-y: auto;"></div>
-            <div class="controls-grid">
-                <div class="control-group">
-                    <!-- Basic Layer Controls -->
-                    <button id="add-layer" class="button" data-feature="basicLayers">Add Layer</button>
-                    <button id="toggle-layer-visibility" class="button" data-feature="basicLayers">Toggle Visibility</button>
-                    <button id="toggle-layer-lock" class="button" data-feature="basicLayers">Toggle Lock</button>
-                    
-                    <!-- Advanced Layer Controls -->
-                    <button id="add-group" class="button" data-feature="layerEffects">Add Group</button>
-                    <button id="layer-mask" class="button" data-feature="layerEffects">Add Mask</button>
-                    <button id="layer-effects" class="button" data-feature="layerEffects">Effects</button>
-                    <button id="layer-blend" class="button" data-feature="layerEffects">Blend Mode</button>
-                </div>
-            </div>
-        </section>
-        <section id="settings-section">
-            <h3>Settings</h3>
-            <div class="controls-grid">
-                <div class="control-group">
-                    <button id="theme-toggle" class="button">Toggle Theme</button>
-                    <button id="high-contrast-toggle" class="button">High Contrast</button>
-                    <button id="reset-session" class="button">Reset Session</button>
-                </div>
-                <div class="control-group">
-                    <button id="debug-toggle" class="button">Toggle Debug</button>
-                    <button id="help-toggle" class="button">Help</button>
-                    <label for="autosave-toggle">
-                        <input type="checkbox" id="autosave-toggle" checked /> Enable Autosave
-                    </label>
-                    <label for="shortcuts-toggle">
-                        <input type="checkbox" id="shortcuts-toggle" checked /> Enable Shortcuts
-                    </label>
-                </div>
-            </div>
-        </section>
-        <section id="advanced-tools" class="hidden">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <button id="path-union" class="button" data-feature="pathOperations">Union Paths</button>
-                    <button id="path-intersect" class="button" data-feature="pathOperations">Intersect Paths</button>
-                    <button id="path-difference" class="button" data-feature="pathOperations">Difference Paths</button>
-                    <button id="vectorize" class="button" data-feature="advancedDrawing">Vectorize Image</button>
-                </div>
-            </div>
-        </section>
-        <section id="collaboration" class="hidden">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <button id="share-project" class="button" data-feature="realtimeCollaboration">Share Project</button>
-                    <button id="invite-collaborators" class="button" data-feature="realtimeCollaboration">Invite Collaborators</button>
-                    <button id="view-history" class="button" data-feature="realtimeCollaboration">View History</button>
-                </div>
-            </div>
-        </section>
-        <section id="plugins" class="hidden">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <button id="plugin-manager" class="button" data-feature="pluginSystem">Plugin Manager</button>
-                    <button id="install-plugin" class="button" data-feature="pluginSystem">Install Plugin</button>
-                    <button id="plugin-settings" class="button" data-feature="pluginSystem">Plugin Settings</button>
-                </div>
-            </div>
-        </section>
+            </aside>
+        </div>
+
         <div id="preview-window" class="hidden"></div>
-        <div id="debug-panel" style="display: none;">
-            <h3>Debug Panel</h3>
+        <div id="debug-panel" class="app-modal" style="display: none;" role="dialog" aria-label="Debug">
+            <h3>Debug</h3>
             <pre id="svg-output"></pre>
-            <button id="close-debug" class="button">Close</button>
+            <button type="button" id="close-debug" class="button">Close</button>
         </div>
-        <div id="help-modal" style="display: none;">
-            <h3>Help - Doppleit Vector v2 Pro</h3>
-            <p><strong>Tools:</strong> Use Pen (1), Rectangle (2), Circle (3), Text (4), or Select (S) to draw or edit objects.</p>
-            <p><strong>Layers:</strong> Add, rename (double-click), drag to reorder, or group layers. Toggle visibility/lock.</p>
-            <p><strong>Timeline:</strong> Use Previous/Next to navigate version history.</p>
-            <p><strong>Color:</strong> Pick colors via wheel, sliders, or inputs (HEX/RGB/HSL).</p>
-            <p><strong>Export:</strong> Save as SVG, PNG, or JSON/DOPPLE project file.</p>
-            <p><strong>UX:</strong> Hold Shift for uniform scale, Alt to duplicate, drag guides from rulers.</p>
-            <p><strong>Shortcuts:</strong> Undo (Ctrl+Z), Redo (Ctrl+Y), Delete (Del), Escape to deselect, Tools (1-4, S).</p>
-            <p><strong>Mobile:</strong> Use pinch gestures to zoom, precision mode for detailed work.</p>
-            <p><strong>Feedback:</strong> Love it? Found a bug? <a href="https://x.com/yourprofile" target="_blank">DM me on X!</a></p>
-            <button id="close-help" class="button">Close</button>
+        <div id="help-modal" class="app-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+            <h3 id="help-modal-title">Doppleit Vector — help</h3>
+            <p><strong>Tools:</strong> Pen (1), Rectangle (2), Circle (3), Text (4), or Select (S) to draw or edit.</p>
+            <p><strong>Layers:</strong> Add, rename (double-click), drag to reorder, or group. Toggle visibility/lock.</p>
+            <p><strong>Timeline:</strong> Previous/Next for version history when enabled.</p>
+            <p><strong>Color:</strong> Wheel, sliders, or HEX/RGB/HSL.</p>
+            <p><strong>Export:</strong> SVG, PNG, JPEG, or save/load project files.</p>
+            <p><strong>UX:</strong> Shift for uniform scale, Alt to duplicate, drag guides from rulers.</p>
+            <p><strong>Shortcuts:</strong> Undo (Ctrl+Z), Redo (Ctrl+Y), Delete, Escape, tools 1–4 and S.</p>
+            <p><strong>Mobile:</strong> Pinch to zoom, touch controls below the canvas when shown.</p>
+            <button type="button" id="close-help" class="button">Close</button>
         </div>
-        <div id="autosave-notification" style="display: none;">Project autosaved</div>
-        <div id="tooltip" style="display: none;"></div>
+        <div id="autosave-notification" style="display: none;" role="status">Project autosaved</div>
+        <div id="tooltip" style="display: none;" role="tooltip"></div>
     </div>
 
     <script type="module" src="src/js/app.js" nonce="doppleit"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93d46a201e35b0f1',t:'MTc0NjgyNzQ0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
