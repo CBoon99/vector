@@ -3,6 +3,8 @@
  * Displays a warning banner when the device is in low performance mode
  */
 
+import { EnvironmentManager } from '../../core/env.js';
+
 export class PerformanceBanner {
   constructor() {
     this.banner = null;

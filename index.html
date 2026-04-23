@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-doppleit'; style-src 'self' 'nonce-doppleit' https://fonts.googleapis.com; img-src 'self' data: blob:; connect-src 'self'">
+    <!-- CSP is set in netlify.toml for production. Avoid a second strict meta policy here: it
+         blocked style-loader and inline style attributes, and could stack with header CSP. -->
     <title>Doppleit Vector — Free in-browser vector editor, SVG &amp; image tools</title>
     <meta name="description" content="Doppleit Vector is a free, client-side web app to draw, import images (JPG, PNG, WebP, SVG), vectorize with edge trace or cell poster, paint pixels, manage layers, and export. Runs in your browser with JavaScript. Open source.">
     <meta name="keywords" content="vector editor, free vector graphics, browser vector editor, SVG editor online, in-browser design tool, Doppleit Vector, image to vector, lightweight illustrator alternative, web canvas, vanilla JavaScript">
@@ -177,7 +177,7 @@
                         <div class="controls-grid">
                             <div class="control-group control-group--filename">
                                 <label for="filename">Filename</label>
-                                <input type="text" id="filename" value="vectorized" aria-label="Export filename" pattern="^[a-zA-Z0-9_-]+$" />
+                                <input type="text" id="filename" value="vectorized" aria-label="Export filename" pattern="[-0-9A-Za-z_]+" />
                             </div>
                             <div class="control-group">
                                 <button type="button" id="export-png" class="button" data-feature="basicExport">PNG</button>
@@ -307,7 +307,7 @@
         <div id="autosave-notification" style="display: none;" role="status">Project autosaved</div>
         <div id="tooltip" style="display: none;" role="tooltip"></div>
     </div>
-
-    <script type="module" src="src/js/app.js" nonce="doppleit"></script>
+    <!-- Entry script is injected by Webpack (npm run build / npm run dev). Do not add
+         src="src/js/app.js" here: on Netlify, SPA routing would return index.html and break modules. -->
 </body>
 </html>
