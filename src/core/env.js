@@ -259,7 +259,15 @@ export const EnvironmentManager = {
    * @returns {boolean} - Whether to show a warning
    */
   shouldWarnUser() {
-    return this.isLowPower && !this.isForceFullMode && localStorage.getItem('env:hideBanner') !== 'true';
+    if (this.isForceFullMode) return false;
+    if (localStorage.getItem('env:hideBanner') === 'true') return false;
+    if (localStorage.getItem('env:showPerfBanner') !== 'true') {
+      return false;
+    }
+    const mem = navigator.deviceMemory;
+    const cores = navigator.hardwareConcurrency || 4;
+    const veryTight = mem != null && mem <= 2 && cores <= 2;
+    return veryTight && (this.isSlowConnection || this.isLowPower);
   },
 
   /**

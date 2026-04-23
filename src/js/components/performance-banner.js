@@ -12,6 +12,8 @@ export class PerformanceBanner {
   createBanner() {
     this.banner = document.createElement('div');
     this.banner.className = 'performance-banner';
+    this.banner.setAttribute('role', 'status');
+    this.banner.setAttribute('aria-live', 'polite');
     this.banner.style.cssText = `
       position: fixed;
       top: 0;
@@ -21,10 +23,11 @@ export class PerformanceBanner {
       color: var(--banner-text, #856404);
       padding: 12px;
       text-align: center;
-      z-index: 1000;
+      z-index: 50000;
       display: none;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       font-family: var(--font-family, system-ui, -apple-system, sans-serif);
+      pointer-events: auto;
     `;
 
     const content = document.createElement('div');
@@ -83,14 +86,18 @@ export class PerformanceBanner {
     `;
 
     const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Dismiss performance notice');
     closeButton.innerHTML = '×';
     closeButton.style.cssText = `
       background: none;
       border: none;
       font-size: 20px;
+      line-height: 1;
       color: var(--banner-text, #856404);
       cursor: pointer;
-      padding: 0 8px;
+      padding: 4px 10px;
+      z-index: 1;
     `;
 
     const exportButton = document.createElement('button');
@@ -120,12 +127,12 @@ export class PerformanceBanner {
       localStorage.setItem('env:hideBanner', 'true');
     });
 
-    message.querySelector('.show-details').addEventListener('click', (e) => {
+    message.querySelector('.show-details')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.showDetails();
     });
 
-    message.querySelector('.help-icon').addEventListener('click', (e) => {
+    message.querySelector('.help-icon')?.addEventListener('click', (e) => {
       e.preventDefault();
       this.showHelp();
     });
@@ -138,10 +145,19 @@ export class PerformanceBanner {
       EnvironmentManager.toggleForceFullMode(e.target.checked, permanent);
       if (e.target.checked) {
         this.hide();
-      } else {
+      } else if (EnvironmentManager.shouldWarnUser()) {
         this.show();
+      } else {
+        this.hide();
       }
     });
+
+    const permInput = permanentToggle.querySelector('input');
+    if (permInput) {
+      permInput.addEventListener('change', () => {
+        localStorage.setItem('env:permanentForcePref', String(permInput.checked));
+      });
+    }
 
     // Add export button handler
     exportButton.addEventListener('click', () => {

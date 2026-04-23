@@ -179,26 +179,32 @@ class ExportService {
         }
     }
 
-    async exportToSVG(document, settings) {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', document.width);
-        svg.setAttribute('height', document.height);
-        svg.setAttribute('viewBox', `0 0 ${document.width} ${document.height}`);
+    async exportToSVG(vectorDoc, settings) {
+        const dom = typeof document !== 'undefined' ? document : null;
+        if (!dom || !vectorDoc) {
+            throw new FileError('Invalid export context');
+        }
+        const svg = dom.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const w = vectorDoc.width || 800;
+        const h = vectorDoc.height || 600;
+        svg.setAttribute('width', w);
+        svg.setAttribute('height', h);
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
         if (settings.includeMetadata) {
-            const metadata = document.createElementNS('http://www.w3.org/2000/svg', 'metadata');
-            metadata.textContent = JSON.stringify(document.metadata || {});
+            const metadata = dom.createElementNS('http://www.w3.org/2000/svg', 'metadata');
+            metadata.textContent = JSON.stringify(vectorDoc.metadata || {});
             svg.appendChild(metadata);
         }
 
         if (settings.includeStyles) {
-            const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+            const style = dom.createElementNS('http://www.w3.org/2000/svg', 'style');
             style.textContent = this.generateSVGStyles();
             svg.appendChild(style);
         }
 
-        // Convert document objects to SVG elements
-        document.objects.forEach(obj => {
+        const objects = vectorDoc.objects || [];
+        objects.forEach(obj => {
             const element = this.convertObjectToSVGElement(obj);
             if (element) svg.appendChild(element);
         });
@@ -207,18 +213,24 @@ class ExportService {
         return new Blob([svgString], { type: 'image/svg+xml' });
     }
 
-    async exportToRaster(document, format, settings) {
-        const canvas = document.createElement('canvas');
-        canvas.width = document.width;
-        canvas.height = document.height;
+    async exportToRaster(vectorDoc, format, settings) {
+        const dom = typeof document !== 'undefined' ? document : null;
+        if (!dom || !vectorDoc) {
+            throw new FileError('Invalid export context');
+        }
+        const canvas = dom.createElement('canvas');
+        const w = vectorDoc.width || 800;
+        const h = vectorDoc.height || 600;
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
 
         // Draw background
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw objects
-        document.objects.forEach(obj => {
+        const objects = vectorDoc.objects || [];
+        objects.forEach(obj => {
             this.drawObjectToCanvas(ctx, obj);
         });
 
@@ -1030,13 +1042,12 @@ class ExportService {
         try {
             this.validateFormat(format);
             const exportSettings = this.getExportSettings(format, settings);
-            
-            // Create a temporary document with only the selected objects
             const tempDocument = {
-                ...document,
-                objects: selection
+                objects: Array.isArray(selection) ? selection : [],
+                width: settings.width ?? 800,
+                height: settings.height ?? 600,
+                metadata: settings.metadata ?? {}
             };
-            
             return await this.exportDocument(tempDocument, format, exportSettings);
         } catch (error) {
             ErrorHandler.handle(error, 'ExportService.exportSelection');
@@ -1048,15 +1059,12 @@ class ExportService {
         try {
             this.validateFormat(format);
             const exportSettings = this.getExportSettings(format, settings);
-            
-            // Create a temporary document with only the artboard content
             const tempDocument = {
-                ...document,
-                objects: artboard.objects,
-                width: artboard.width,
-                height: artboard.height
+                objects: artboard?.objects || [],
+                width: artboard?.width ?? 800,
+                height: artboard?.height ?? 600,
+                metadata: artboard?.metadata || {}
             };
-            
             return await this.exportDocument(tempDocument, format, exportSettings);
         } catch (error) {
             ErrorHandler.handle(error, 'ExportService.exportArtboard');
@@ -1068,13 +1076,13 @@ class ExportService {
         try {
             this.validateFormat(format);
             const exportSettings = this.getExportSettings(format, settings);
-            
-            // Create a temporary document with only the specified layers
+            const objects = (layers || []).flatMap((layer) => layer?.objects || []);
             const tempDocument = {
-                ...document,
-                layers: layers
+                objects,
+                width: settings.width ?? 800,
+                height: settings.height ?? 600,
+                metadata: settings.metadata ?? {}
             };
-            
             return await this.exportDocument(tempDocument, format, exportSettings);
         } catch (error) {
             ErrorHandler.handle(error, 'ExportService.exportLayers');

@@ -113,8 +113,33 @@ class App {
     }
 
     initializeExport() {
-        if (document.getElementById('export-svg')) {
+        this.wireBasicExportButtons();
+        if (document.getElementById('export-preset')) {
             this.initializeExportControls();
+        }
+    }
+
+    wireBasicExportButtons() {
+        const safeExport = (format) => {
+            this.exportDocument(format).catch(() => {});
+        };
+        const map = [
+            ['export-svg', 'svg'],
+            ['export-png', 'png'],
+            ['export-jpg', 'jpg'],
+            ['export-pdf', 'pdf']
+        ];
+        for (const [id, fmt] of map) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('click', () => safeExport(fmt));
+            }
+        }
+        const sel = document.getElementById('export-selection');
+        if (sel) {
+            sel.addEventListener('click', () => {
+                this.exportSelection('svg').catch(() => {});
+            });
         }
     }
 
@@ -502,33 +527,37 @@ class App {
 
     async exportDocument(format, settings = {}) {
         try {
-            const document = {
+            const baseName =
+                document.getElementById('filename')?.value?.trim()?.replace(/[^a-zA-Z0-9_-]/g, '_') ||
+                'vectorized';
+            const vectorDoc = {
                 objects: this.layerManager.getAllObjects(),
                 width: this.canvasManager.canvas.width,
                 height: this.canvasManager.canvas.height,
                 metadata: this.stateManager.getMetadata()
             };
 
-            // Get export settings from UI
-            const preset = document.getElementById('export-preset').value;
-            const quality = document.getElementById('export-quality').value;
-            const includeMetadata = document.getElementById('include-metadata').checked;
-            const includeStyles = document.getElementById('include-styles').checked;
-            const compressExport = document.getElementById('compress-export').checked;
-            const includeTransparency = document.getElementById('include-transparency').checked;
+            const presetEl = document.getElementById('export-preset');
+            const qualityEl = document.getElementById('export-quality');
+            const metaEl = document.getElementById('include-metadata');
+            const stylesEl = document.getElementById('include-styles');
+            const compressEl = document.getElementById('compress-export');
+            const transEl = document.getElementById('include-transparency');
 
             const exportSettings = {
-                preset: preset || undefined,
-                quality: quality,
-                includeMetadata,
-                includeStyles,
-                compression: compressExport,
-                includeTransparency,
+                preset: presetEl?.value || undefined,
+                quality: qualityEl?.value,
+                includeMetadata: metaEl ? metaEl.checked : true,
+                includeStyles: stylesEl ? stylesEl.checked : true,
+                compression: compressEl ? compressEl.checked : true,
+                includeTransparency: transEl ? transEl.checked : true,
                 ...settings
             };
 
-            const exportedFile = await ExportService.exportDocument(document, format, exportSettings);
-            this.downloadFile(exportedFile, `document.${format}`);
+            const exportedFile = await ExportService.exportDocument(vectorDoc, format, exportSettings);
+            const ext = format === 'jpg' ? 'jpg' : format;
+            this.downloadFile(exportedFile, `${baseName}.${ext}`);
+            UIService.showMessage(`Exported ${ext.toUpperCase()}`, 'success');
         } catch (error) {
             ErrorHandler.handle(error, 'exportDocument');
         }
@@ -536,19 +565,16 @@ class App {
 
     initializeExportControls() {
         const exportPreset = document.getElementById('export-preset');
-        const exportQuality = document.getElementById('export-quality');
         const exportOptions = document.querySelector('.export-options');
-
-        // Show/hide custom options based on preset selection
-        exportPreset.addEventListener('change', () => {
-            exportOptions.style.display = exportPreset.value === '' ? 'block' : 'none';
-        });
-
-        // Initialize export buttons
-        document.getElementById('export-svg').addEventListener('click', () => this.exportDocument('svg'));
-        document.getElementById('export-png').addEventListener('click', () => this.exportDocument('png'));
-        document.getElementById('export-pdf').addEventListener('click', () => this.exportDocument('pdf'));
-        document.getElementById('export-json').addEventListener('click', () => this.exportDocument('json'));
+        if (exportPreset && exportOptions) {
+            exportPreset.addEventListener('change', () => {
+                exportOptions.style.display = exportPreset.value === '' ? 'block' : 'none';
+            });
+        }
+        const jsonBtn = document.getElementById('export-json');
+        if (jsonBtn) {
+            jsonBtn.addEventListener('click', () => this.exportDocument('json'));
+        }
     }
 
     async exportSelection(format, settings = {}) {
@@ -558,8 +584,17 @@ class App {
                 throw new DrawingError('No objects selected');
             }
 
-            const exportedFile = await ExportService.exportSelection(selection, format, settings);
-            this.downloadFile(exportedFile, `selection.${format}`);
+            const exportedFile = await ExportService.exportSelection(selection, format, {
+                ...settings,
+                width: this.canvasManager.canvas.width,
+                height: this.canvasManager.canvas.height,
+                metadata: this.stateManager.getMetadata()
+            });
+            const base =
+                document.getElementById('filename')?.value?.trim()?.replace(/[^a-zA-Z0-9_-]/g, '_') ||
+                'selection';
+            this.downloadFile(exportedFile, `${base}-selection.${format}`);
+            UIService.showMessage('Exported selection', 'success');
         } catch (error) {
             ErrorHandler.handle(error, 'exportSelection');
         }
