@@ -59,6 +59,7 @@ export function ensureEditCanvas(obj) {
 export function paintPixelOnRaster(obj, x, y, color) {
     const ctx = ensureEditCanvas(obj);
     if (!ctx) {
+        console.warn('[DEBUG] paintPixel: Could not get edit canvas context');
         return false;
     }
     const w = obj.width != null ? obj.width : 1;
@@ -68,11 +69,13 @@ export function paintPixelOnRaster(obj, x, y, color) {
     const lx = (x - obj.x) / w;
     const ly = (y - obj.y) / h;
     if (lx < 0 || lx > 1 || ly < 0 || ly > 1) {
+        console.warn(`[DEBUG] paintPixel: Point (${x}, ${y}) outside raster bounds at (${obj.x}, ${obj.y}) size ${w}x${h}`);
         return false;
     }
     const px = Math.max(0, Math.min(srcW - 1, Math.floor(lx * srcW)));
     const py = Math.max(0, Math.min(srcH - 1, Math.floor(ly * srcH)));
     ctx.fillStyle = color;
     ctx.fillRect(px, py, 1, 1);
+    console.log(`[DEBUG] Painted pixel at (${px}, ${py}) in image space, color: ${color}`);
     return true;
 }

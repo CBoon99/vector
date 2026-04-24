@@ -269,9 +269,18 @@ class App {
     }
 
     initializeColorPicker() {
+        const self = this;
         initColorPickerWheel({
             stateManager: this.stateManager,
-            requestRedraw: () => this.canvasManager?.draw?.()
+            requestRedraw: () => {
+                try {
+                    if (self.canvasManager && typeof self.canvasManager.draw === 'function') {
+                        self.canvasManager.draw();
+                    }
+                } catch (err) {
+                    console.error('[DEBUG] Error in requestRedraw:', err);
+                }
+            }
         });
     }
 
@@ -586,6 +595,13 @@ class App {
                     this.layerManager.addObjects(list);
                     this.canvasManager.draw();
                     requestAnimationFrame(() => this.canvasManager.draw());
+
+                    // Auto-fit first raster image to canvas
+                    const firstRaster = list.find(obj => obj.type === 'raster');
+                    if (firstRaster && firstRaster.image) {
+                        this.autoFitImageToViewport(firstRaster);
+                    }
+
                     this.showImageUploadFeedback(file);
                     UIService.showMessage('Added to canvas', 'success');
                 } else {
@@ -595,6 +611,40 @@ class App {
                 ErrorHandler.handle(error, 'handleFiles');
             }
         }
+    }
+
+    autoFitImageToViewport(imageObj) {
+        if (!imageObj || !imageObj.image) {
+            console.warn('[DEBUG] Cannot auto-fit: no image object');
+            return;
+        }
+
+        const imgWidth = imageObj.image.naturalWidth || imageObj.image.width || 100;
+        const imgHeight = imageObj.image.naturalHeight || imageObj.image.height || 100;
+        const canvasWidth = this.canvasManager.canvas.width;
+        const canvasHeight = this.canvasManager.canvas.height;
+
+        // Calculate scale to fit image in viewport with padding
+        const padding = 40;
+        const availWidth = canvasWidth - padding * 2;
+        const availHeight = canvasHeight - padding * 2;
+        const scaleX = availWidth / imgWidth;
+        const scaleY = availHeight / imgHeight;
+        const fitScale = Math.min(scaleX, scaleY, 1); // Don't upscale
+
+        // Position at center
+        const scaledWidth = imgWidth * fitScale;
+        const scaledHeight = imgHeight * fitScale;
+        imageObj.x = (canvasWidth - scaledWidth) / 2;
+        imageObj.y = (canvasHeight - scaledHeight) / 2;
+        imageObj.width = scaledWidth;
+        imageObj.height = scaledHeight;
+
+        // Reset zoom to fit the content
+        this.canvasManager.resetZoom();
+
+        console.log(`[DEBUG] Auto-fitted image: ${imgWidth}x${imgHeight} → ${scaledWidth.toFixed(0)}x${scaledHeight.toFixed(0)} at (${imageObj.x.toFixed(0)}, ${imageObj.y.toFixed(0)})`);
+        this.canvasManager.draw();
     }
 
     showImageUploadFeedback(file) {
@@ -654,14 +704,18 @@ class App {
     handleDrawStart(point) {
         try {
             if (this.stateManager.currentTool === 'pixel-tool') {
+                console.log(`[DEBUG] Pixel tool: Click at (${point.x}, ${point.y}), color: ${this.getStrokeColor()}`);
                 const obj = pixelEdit.findRasterUnderPoint(
                     this.layerManager.getLayers(),
                     point.x,
                     point.y
                 );
                 if (obj) {
+                    console.log(`[DEBUG] Found raster at (${obj.x}, ${obj.y}) size ${obj.width}x${obj.height}`);
                     pixelEdit.paintPixelOnRaster(obj, point.x, point.y, this.getStrokeColor());
                     this.canvasManager.draw();
+                } else {
+                    console.warn(`[DEBUG] No raster found under point (${point.x}, ${point.y})`);
                 }
                 return;
             }
@@ -684,6 +738,8 @@ class App {
                 if (obj) {
                     pixelEdit.paintPixelOnRaster(obj, point.x, point.y, this.getStrokeColor());
                     this.canvasManager.draw();
+                } else {
+                    // Silently ignore if dragging outside raster area
                 }
                 return;
             }

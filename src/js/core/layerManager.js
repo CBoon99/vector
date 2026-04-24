@@ -244,7 +244,12 @@ export class LayerManager {
                         );
                         break;
                     }
-                    if (obj.image && obj.image.complete && obj.image.naturalWidth) {
+                    // Use editCanvas if it exists (pixel edits), otherwise use original image
+                    if (obj.editCanvas) {
+                        const w = width != null ? width : obj.editCanvas.width;
+                        const h = height != null ? height : obj.editCanvas.height;
+                        ctx.drawImage(obj.editCanvas, x, y, w, h);
+                    } else if (obj.image && obj.image.complete && obj.image.naturalWidth) {
                         const w = width != null ? width : obj.image.naturalWidth;
                         const h = height != null ? height : obj.image.naturalHeight;
                         ctx.drawImage(obj.image, x, y, w, h);

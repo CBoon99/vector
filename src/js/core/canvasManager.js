@@ -1113,8 +1113,28 @@ export class CanvasManager {
     }
 
     setZoom(zoom) {
-        const z = Math.max(0.1, Math.min(10, Number(zoom) || 1));
-        this.scale = z;
+        const oldScale = this.scale;
+        const newScale = Math.max(0.1, Math.min(10, Number(zoom) || 1));
+
+        // If scale hasn't changed, no need to adjust offset
+        if (oldScale === newScale) {
+            return;
+        }
+
+        // Calculate viewport center in world coordinates before zoom
+        const centerScreenX = this.canvas.width / 2;
+        const centerScreenY = this.canvas.height / 2;
+        const centerWorldX = (centerScreenX - this.offsetX) / oldScale;
+        const centerWorldY = (centerScreenY - this.offsetY) / oldScale;
+
+        // Apply new scale
+        this.scale = newScale;
+
+        // Adjust offset to keep world center at screen center
+        this.offsetX = centerScreenX - centerWorldX * newScale;
+        this.offsetY = centerScreenY - centerWorldY * newScale;
+
+        console.log(`[DEBUG] Zoom changed: ${oldScale.toFixed(2)} → ${newScale.toFixed(2)}, offset: (${this.offsetX.toFixed(0)}, ${this.offsetY.toFixed(0)})`);
         this.scheduleDraw();
     }
 
