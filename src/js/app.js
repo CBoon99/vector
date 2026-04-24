@@ -28,6 +28,7 @@ import documentationService from './services/documentationService.js';
 import { LayerPanel } from './components/layer-panel.js';
 import SmartShapeTool from './tools/smart-shape-tool.js';
 import SmartConstraintsTool from './tools/smart-constraints-tool.js';
+import { initColorPickerWheel } from './components/colorPickerWheel.js';
 
 class App {
     constructor(canvasElement) {
@@ -105,7 +106,10 @@ class App {
     }
 
     initializeColorPicker() {
-        /* Optional color wheel: UI may add listeners later */
+        initColorPickerWheel({
+            stateManager: this.stateManager,
+            requestRedraw: () => this.canvasManager?.draw?.()
+        });
     }
 
     initializeSettings() {
@@ -398,8 +402,7 @@ class App {
     }
 
     getStrokeColor() {
-        const h = document.getElementById('hex-input')?.value?.trim() || '#111111';
-        return h.startsWith('#') ? h : `#${h}`;
+        return this.stateManager.getState().currentColor;
     }
 
     handleDrawStart(point) {

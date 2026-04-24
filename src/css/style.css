@@ -147,6 +147,8 @@ h1 {
 #color-wheel {
     border-radius: 50%;
     border: 1px solid var(--border-color);
+    cursor: crosshair;
+    touch-action: none;
 }
 
 .canvas-container {

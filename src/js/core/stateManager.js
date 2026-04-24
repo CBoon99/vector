@@ -12,6 +12,40 @@ export class StateManager {
         this.history = [];
         this.currentIndex = -1;
         this.maxHistorySize = 50;
+
+        /** Stroke / fill (used by tools via getState) */
+        this._drawing = {
+            currentColor: '#e37800',
+            strokeWidth: 1,
+            useFill: true,
+            strokeOpacity: 1,
+            strokeStyle: 'solid'
+        };
+    }
+
+    setCurrentColor(hex) {
+        if (typeof hex === 'string' && hex) {
+            this._drawing.currentColor = hex;
+        }
+    }
+
+    setStrokeWidth(n) {
+        const w = Math.max(1, Math.min(64, Number(n) || 1));
+        this._drawing.strokeWidth = w;
+    }
+
+    setStrokeOpacity(o) {
+        this._drawing.strokeOpacity = Math.max(0, Math.min(1, Number(o) ?? 1));
+    }
+
+    setStrokeStyle(style) {
+        if (typeof style === 'string') {
+            this._drawing.strokeStyle = style;
+        }
+    }
+
+    setUseFill(on) {
+        this._drawing.useFill = !!on;
     }
 
     setLayerManager(layerManager) {
@@ -36,11 +70,14 @@ export class StateManager {
     }
 
     getState() {
+        const d = this._drawing;
         return {
-            currentColor: '#111111',
-            strokeWidth: 1,
-            fillColor: 'transparent',
-            currentStrokeWidth: 1
+            currentColor: d.currentColor,
+            strokeWidth: d.strokeWidth,
+            currentStrokeWidth: d.strokeWidth,
+            fillColor: d.useFill ? d.currentColor : 'transparent',
+            strokeOpacity: d.strokeOpacity,
+            strokeStyle: d.strokeStyle
         };
     }
 
