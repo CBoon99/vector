@@ -214,7 +214,9 @@ class ErrorTracker {
             'warning': 2,
             'info': 1
         };
-        return severityLevels[error.severity] >= severityLevels['warning'];
+        // Only show actual errors, not warnings from network/performance
+        // This reduces error fatigue from non-critical issues
+        return error.severity === 'error' && error.type !== 'performance' && error.type !== 'network';
     }
 
     sendToServer(error) {

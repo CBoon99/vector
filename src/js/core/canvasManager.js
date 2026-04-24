@@ -1118,6 +1118,21 @@ export class CanvasManager {
         this.scheduleDraw();
     }
 
+    // Zoom in by multiplying scale by 1.2
+    zoomIn() {
+        this.setZoom(this.scale * 1.2);
+    }
+
+    // Zoom out by dividing scale by 1.2
+    zoomOut() {
+        this.setZoom(this.scale / 1.2);
+    }
+
+    // Reset zoom to 100%
+    resetZoom() {
+        this.setZoom(1);
+    }
+
     scheduleDraw() {
         const now = performance.now();
         

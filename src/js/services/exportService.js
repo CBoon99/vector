@@ -225,7 +225,7 @@ class ExportService {
         canvas.height = h;
         const ctx = canvas.getContext('2d');
 
-        // Draw background
+        // Draw background (grid is NOT drawn here - grid only appears in interactive editing)
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 

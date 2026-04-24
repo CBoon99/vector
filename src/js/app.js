@@ -307,6 +307,8 @@ class App {
         this.setupHelpModalListeners();
         this.setupErrorListeners();
         this.setupDocumentationListeners();
+        this.setupZoomControls();
+        this.setupSnapToGridControls();
     }
 
     setupFileUploadListeners() {
@@ -396,6 +398,74 @@ class App {
             documentationButton.addEventListener('click', () => {
                 this.documentationService.showDocumentation();
             });
+        }
+    }
+
+    setupZoomControls() {
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const resetZoomBtn = document.getElementById('reset-zoom');
+
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                this.canvasManager.zoomIn();
+                this.canvasManager.draw();
+            });
+        }
+
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                this.canvasManager.zoomOut();
+                this.canvasManager.draw();
+            });
+        }
+
+        if (resetZoomBtn) {
+            resetZoomBtn.addEventListener('click', () => {
+                this.canvasManager.resetZoom();
+                this.canvasManager.draw();
+            });
+        }
+
+        // Also handle mouse wheel zoom
+        this.canvasManager.canvas.addEventListener('wheel', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    this.canvasManager.zoomIn();
+                } else {
+                    this.canvasManager.zoomOut();
+                }
+                this.canvasManager.draw();
+            }
+        });
+    }
+
+    setupSnapToGridControls() {
+        const snapGridCheckbox = document.getElementById('snap-grid');
+        const gridSizeInput = document.getElementById('grid-size');
+
+        if (snapGridCheckbox) {
+            snapGridCheckbox.addEventListener('change', (e) => {
+                this.canvasManager.snapToGrid = e.target.checked;
+                this.canvasManager.scheduleDraw();
+            });
+            // Set initial state
+            this.canvasManager.snapToGrid = snapGridCheckbox.checked;
+        }
+
+        if (gridSizeInput) {
+            gridSizeInput.addEventListener('change', (e) => {
+                const size = parseInt(e.target.value, 10);
+                if (!isNaN(size) && size > 0) {
+                    this.canvasManager.setGridSize(size);
+                }
+            });
+            // Set initial state
+            const initialSize = parseInt(gridSizeInput.value, 10);
+            if (!isNaN(initialSize) && initialSize > 0) {
+                this.canvasManager.setGridSize(initialSize);
+            }
         }
     }
 
