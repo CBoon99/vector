@@ -142,6 +142,7 @@
                         <button type="button" id="delete" class="button" title="Delete selected" data-feature="basicDrawing">Delete</button>
                         <button type="button" id="clear-canvas" class="button" title="Clear canvas" data-feature="basicDrawing">Clear</button>
                         <button type="button" id="pixel-tool" class="button" data-tool="pixel-tool" title="Pixel paint (on bitmap import)">Pixel</button>
+                        <button type="button" id="vectorize" class="button" title="Vectorize selected image into editable cells (uses grid cell size)">Vectorize</button>
                     </nav>
                 </section>
                 <div id="tool-controls" class="tool-controls-host" aria-live="polite"></div>
@@ -167,6 +168,9 @@
                     <div class="snap-row">
                         <label for="snap-grid">Snap to grid</label>
                         <input type="checkbox" id="snap-grid" checked />
+                        <label for="grid-size">Cell:</label>
+                        <input type="number" id="grid-size" min="2" max="64" step="1" value="8" aria-label="Grid cell size in pixels" style="width:4em;" />
+                        <span>px</span>
                     </div>
                 </section>
             </div>
@@ -260,7 +264,6 @@
                                 <button type="button" id="path-union" class="button" data-feature="pathOperations">Union</button>
                                 <button type="button" id="path-intersect" class="button" data-feature="pathOperations">Intersect</button>
                                 <button type="button" id="path-difference" class="button" data-feature="pathOperations">Difference</button>
-                                <button type="button" id="vectorize" class="button" data-feature="advancedDrawing">Vectorize</button>
                             </div>
                         </div>
                     </section>

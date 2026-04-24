@@ -25,6 +25,10 @@ export class CanvasManager {
         this.scale = 1;
         this.offsetX = 0;
         this.offsetY = 0;
+
+        // Snap-to-grid (driven by UI in app.js)
+        this.snapToGrid = false;
+        this.gridSize = 8;
         
         // Event handling state
         this.isDragging = false;
@@ -855,7 +859,7 @@ export class CanvasManager {
         this.lastY = pos.y;
 
         if (this.onDrawStart) {
-            this.onDrawStart(pos);
+            this.onDrawStart(this.maybeSnap(pos));
         }
     }
 
@@ -902,7 +906,7 @@ export class CanvasManager {
                     this.onPan(this.offsetX, this.offsetY);
                 }
             } else if (this.onDraw) {
-                this.onDraw(pos);
+                this.onDraw(this.maybeSnap(pos));
             }
         }
     }
@@ -913,7 +917,7 @@ export class CanvasManager {
             this.isDragging = false;
             const pos = this.getMousePosition(event);
             if (this.onDrawEnd) {
-                this.onDrawEnd(pos);
+                this.onDrawEnd(this.maybeSnap(pos));
             }
         }
     }
@@ -923,7 +927,7 @@ export class CanvasManager {
         if (this.isDragging) {
             this.isDragging = false;
             if (this.onDrawEnd) {
-                this.onDrawEnd(this.getMousePosition(event));
+                this.onDrawEnd(this.maybeSnap(this.getMousePosition(event)));
             }
         }
     }
@@ -984,7 +988,7 @@ export class CanvasManager {
             this.touchStartY = touch.clientY;
 
             if (this.onDrawStart) {
-                this.onDrawStart(pos);
+                this.onDrawStart(this.maybeSnap(pos));
             }
         } else if (event.touches.length === 2) {
             // Two touches - handle pinch zoom
@@ -1041,7 +1045,7 @@ export class CanvasManager {
                     this.onPan(this.offsetX, this.offsetY);
                 }
             } else if (this.onDraw) {
-                this.onDraw(pos);
+                this.onDraw(this.maybeSnap(pos));
             }
         } else if (event.touches.length === 2 && this.isPinching) {
             // Pinch zoom
@@ -1066,7 +1070,7 @@ export class CanvasManager {
             if (this.isDragging) {
                 this.isDragging = false;
                 if (this.onDrawEnd) {
-                    this.onDrawEnd(this.lastX, this.lastY);
+                    this.onDrawEnd(this.maybeSnap({ x: this.lastX, y: this.lastY }));
                 }
             }
             if (this.isPinching) {
@@ -1142,23 +1146,47 @@ export class CanvasManager {
     drawGrid() {
         const g = this.bufferCtx;
         if (!g) return;
-        const gridSize = 20;
+        if (!this.snapToGrid) return; // only show grid when snap is on
+        const gridSize = Math.max(2, Number(this.gridSize) || 8);
         const width = this.canvas.width / this.scale;
         const height = this.canvas.height / this.scale;
 
+        g.save();
         g.beginPath();
-        g.strokeStyle = '#e8e8e8';
+        g.strokeStyle = 'rgba(120,120,120,0.22)';
         g.lineWidth = 0.5;
 
         for (let x = 0; x <= width; x += gridSize) {
-            g.moveTo(x, 0);
-            g.lineTo(x, height);
+            g.moveTo(x + 0.5, 0);
+            g.lineTo(x + 0.5, height);
         }
         for (let y = 0; y <= height; y += gridSize) {
-            g.moveTo(0, y);
-            g.lineTo(width, y);
+            g.moveTo(0, y + 0.5);
+            g.lineTo(width, y + 0.5);
         }
         g.stroke();
+        g.restore();
+    }
+
+    /** Round a point to the current grid if snap is on. */
+    maybeSnap(pos) {
+        if (!this.snapToGrid || !pos) return pos;
+        const s = Math.max(2, Number(this.gridSize) || 8);
+        return {
+            x: Math.round(pos.x / s) * s,
+            y: Math.round(pos.y / s) * s
+        };
+    }
+
+    setSnapToGrid(on) {
+        this.snapToGrid = !!on;
+        this.scheduleDraw();
+    }
+
+    setGridSize(px) {
+        const n = Math.max(2, Math.min(64, Math.floor(Number(px) || 8)));
+        this.gridSize = n;
+        this.scheduleDraw();
     }
 
     drawObjects() {

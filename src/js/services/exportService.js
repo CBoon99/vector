@@ -138,7 +138,7 @@ class ExportService {
 
             return blob;
         } catch (error) {
-            ErrorHandler.handleError(error);
+            ErrorHandler.handle(error, 'exportService.exportDocument');
             throw error;
         }
     }

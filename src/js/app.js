@@ -103,6 +103,96 @@ class App {
         this.initializeShapeTool();
         this.initializeToolbar();
         this.initializeEditControls();
+        this.initializeSnap();
+        this.initializeVectorize();
+    }
+
+    initializeSnap() {
+        const snapCheckbox = document.getElementById('snap-grid');
+        const gridSizeInput = document.getElementById('grid-size');
+
+        const applyFromUI = () => {
+            const on = snapCheckbox ? !!snapCheckbox.checked : false;
+            const size = gridSizeInput ? Number(gridSizeInput.value) || 8 : 8;
+            this.canvasManager.setGridSize(size);
+            this.canvasManager.setSnapToGrid(on);
+        };
+
+        // Initialize state from current UI values
+        applyFromUI();
+
+        if (snapCheckbox) {
+            snapCheckbox.addEventListener('change', applyFromUI);
+        }
+        if (gridSizeInput) {
+            gridSizeInput.addEventListener('input', applyFromUI);
+            gridSizeInput.addEventListener('change', applyFromUI);
+        }
+    }
+
+    initializeVectorize() {
+        const btn = document.getElementById('vectorize');
+        if (!btn) return;
+        btn.addEventListener('click', () => this.handleVectorize().catch((e) => {
+            ErrorHandler.handle(e, 'vectorize');
+        }));
+    }
+
+    async handleVectorize() {
+        // Find a raster to vectorize: prefer selection, else top-most raster.
+        const layers = this.layerManager.getLayers();
+        let target = null;
+        const selection = this.stateManager.getSelection?.() || [];
+        if (selection.length) {
+            target = selection.find((o) => o && o.type === 'raster') || null;
+        }
+        if (!target) {
+            outer: for (let i = layers.length - 1; i >= 0; i--) {
+                const objs = layers[i].objects || [];
+                for (let j = objs.length - 1; j >= 0; j--) {
+                    if (objs[j].type === 'raster') {
+                        target = objs[j];
+                        break outer;
+                    }
+                }
+            }
+        }
+        if (!target || !target.image) {
+            UIService.showMessage('Load an image first, then press Vectorize.', 'info');
+            return;
+        }
+
+        const cellSize = Math.max(2, Number(this.canvasManager.gridSize) || 8);
+        const { cellularVectorizeFromImage } = await import('./services/cellularVectorize.js');
+
+        // Render at full image resolution, one cell per grid unit.
+        // maxSide is set to the image's larger side so no downscaling happens.
+        const w = target.image.naturalWidth || target.image.width || 1;
+        const h = target.image.naturalHeight || target.image.height || 1;
+        const cells = cellularVectorizeFromImage(target.image, {
+            maxSide: Math.max(w, h),
+            cellSize
+        });
+        if (!cells.length) {
+            UIService.showMessage('Vectorize produced no cells.', 'error');
+            return;
+        }
+
+        // Scale cells from image space into the raster's on-canvas footprint,
+        // and translate to the raster's position so the mosaic lines up with the image.
+        const sx = (target.width || w) / w;
+        const sy = (target.height || h) / h;
+        for (const cell of cells) {
+            cell.x = target.x + cell.x * sx;
+            cell.y = target.y + cell.y * sy;
+            cell.width = cell.width * sx;
+            cell.height = cell.height * sy;
+        }
+
+        this.layerManager.addObjects(cells);
+        this.stateManager.saveHistory?.();
+        this.canvasManager.draw();
+        UIService.showMessage(`Vectorized to ${cells.length} cells`, 'success');
     }
 
     initializeColorPicker() {
