@@ -129,20 +129,20 @@
             <div class="app-stage">
                 <section id="drawing-tools" aria-label="Tools">
                     <nav>
-                        <button type="button" id="pen-tool" class="button active" title="Pen Tool (1)" data-feature="basicDrawing">Pen</button>
-                        <button type="button" id="rect-tool" class="button" title="Rectangle Tool (2)" data-feature="basicDrawing">Rectangle</button>
-                        <button type="button" id="circle-tool" class="button" title="Circle Tool (3)" data-feature="basicDrawing">Circle</button>
+                        <button type="button" id="pen-tool" class="button active" title="Pen Tool (1)" data-feature="v2" disabled>Pen (v2)</button>
+                        <button type="button" id="rect-tool" class="button" title="Rectangle Tool (2)" data-feature="v2" disabled>Rect (v2)</button>
+                        <button type="button" id="circle-tool" class="button" title="Circle Tool (3)" data-feature="v2" disabled>Circle (v2)</button>
                         <button type="button" id="select-tool" class="button" title="Select Tool (S)" data-feature="basicDrawing">Select</button>
-                        <button type="button" id="text-tool" class="button" title="Text Tool (4)" data-feature="advancedDrawing">Text</button>
-                        <button type="button" id="bezier-tool" class="button" title="Bezier Tool (B)" data-feature="advancedDrawing">Bezier</button>
-                        <button type="button" id="gradient-tool" class="button" title="Gradient Tool (G)" data-feature="advancedDrawing">Gradient</button>
-                        <button type="button" id="eyedropper-tool" class="button" title="Eyedropper" data-feature="advancedDrawing">Eyedropper</button>
+                        <button type="button" id="text-tool" class="button" title="Text Tool (4)" data-feature="v2" disabled>Text (v2)</button>
+                        <button type="button" id="bezier-tool" class="button" title="Bezier Tool (B)" data-feature="v2" disabled>Bezier (v2)</button>
+                        <button type="button" id="gradient-tool" class="button" title="Gradient Tool (G)" data-feature="v2" disabled>Gradient (v2)</button>
+                        <button type="button" id="eyedropper-tool" class="button" title="Pick color from image">Eyedropper</button>
                         <button type="button" id="undo" class="button" title="Undo (Ctrl+Z)" data-feature="basicDrawing">Undo</button>
                         <button type="button" id="redo" class="button" title="Redo (Ctrl+Y)" data-feature="basicDrawing">Redo</button>
                         <button type="button" id="delete" class="button" title="Delete selected" data-feature="basicDrawing">Delete</button>
                         <button type="button" id="clear-canvas" class="button" title="Clear canvas" data-feature="basicDrawing">Clear</button>
-                        <button type="button" id="pixel-tool" class="button" data-tool="pixel-tool" title="Pixel paint (on bitmap import)">Pixel</button>
-                        <button type="button" id="vectorize" class="button" title="Vectorize selected image into editable cells (uses grid cell size)">Vectorize</button>
+                        <button type="button" id="pixel-tool" class="button" data-tool="pixel-tool" title="Paint pixels on image">Pixel</button>
+                        <button type="button" id="vectorize" class="button" title="Vectorize image (coming soon)" data-feature="v2" disabled>Vectorize (v2)</button>
                     </nav>
                 </section>
                 <div id="tool-controls" class="tool-controls-host" aria-live="polite"></div>
@@ -194,6 +194,21 @@
                                 <label for="svg-transparent">
                                     <input type="checkbox" id="svg-transparent" checked /> Transparent SVG
                                 </label>
+                            </div>
+                            <div class="control-group">
+                                <label for="png-transparent">
+                                    <input type="checkbox" id="png-transparent" /> Transparent PNG
+                                </label>
+                            </div>
+                            <div class="control-group" id="png-bg-control" style="display:none;">
+                                <label for="png-bg-color">Background color:</label>
+                                <select id="png-bg-color">
+                                    <option value="white">White</option>
+                                    <option value="black">Black</option>
+                                    <option value="#f0f0f0">Light Gray</option>
+                                    <option value="#cccccc">Medium Gray</option>
+                                    <option value="#333333">Dark Gray</option>
+                                </select>
                             </div>
                             <div class="control-group">
                                 <button type="button" id="save-project" class="button" data-feature="basicExport">Save project</button>

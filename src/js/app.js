@@ -105,6 +105,7 @@ class App {
         this.initializeEditControls();
         this.initializeSnap();
         this.initializeVectorize();
+        this.initializeEyedropper();
     }
 
     initializeSnap() {
@@ -136,6 +137,78 @@ class App {
         btn.addEventListener('click', () => this.handleVectorize().catch((e) => {
             ErrorHandler.handle(e, 'vectorize');
         }));
+    }
+
+    initializeEyedropper() {
+        const eyedropperBtn = document.getElementById('eyedropper-tool');
+        if (!eyedropperBtn) {
+            console.warn('[DEBUG] Eyedropper button not found');
+            return;
+        }
+
+        console.log('[DEBUG] Eyedropper initialized');
+
+        eyedropperBtn.addEventListener('click', () => {
+            console.log('[DEBUG] Eyedropper activated');
+            this.stateManager.setCurrentTool('eyedropper-tool');
+            this.updateToolUI('eyedropper-tool');
+            UIService.showMessage('Click on a pixel to pick its color', 'info');
+        });
+
+        // Handle eyedropper clicks on canvas
+        this.canvasManager.canvas.addEventListener('click', (e) => {
+            if (this.stateManager.currentTool !== 'eyedropper-tool') return;
+
+            console.log('[DEBUG] Eyedropper click detected');
+
+            // Get pixel color from canvas
+            const rect = this.canvasManager.canvas.getBoundingClientRect();
+            // Convert screen coordinates to canvas coordinates
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const x = Math.round((screenX - this.canvasManager.offsetX) / this.canvasManager.scale);
+            const y = Math.round((screenY - this.canvasManager.offsetY) / this.canvasManager.scale);
+
+            console.log(`[DEBUG] Click coords: screen(${screenX}, ${screenY}) → canvas(${x}, ${y})`);
+            console.log(`[DEBUG] Canvas scale: ${this.canvasManager.scale}, offset: (${this.canvasManager.offsetX}, ${this.canvasManager.offsetY})`);
+
+            // Get image data at that point
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.canvasManager.canvas.width;
+            tempCanvas.height = this.canvasManager.canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Draw all objects to temp canvas
+            const objects = this.layerManager.getAllObjects();
+            console.log(`[DEBUG] Drawing ${objects.length} objects to temp canvas`);
+            objects.forEach(obj => {
+                if (obj.type === 'raster' && obj.image) {
+                    console.log(`[DEBUG] Drawing raster at (${obj.x}, ${obj.y}) size ${obj.width}x${obj.height}`);
+                    tempCtx.drawImage(obj.image, obj.x, obj.y, obj.width, obj.height);
+                }
+            });
+
+            // Get color at click point
+            const imageData = tempCtx.getImageData(x, y, 1, 1).data;
+            console.log(`[DEBUG] Pixel RGBA: ${imageData[0]},${imageData[1]},${imageData[2]},${imageData[3]}`);
+            const hex = '#' + ('000000' + (imageData[0] * 65536 + imageData[1] * 256 + imageData[2]).toString(16)).slice(-6);
+            console.log(`[DEBUG] Picked color: ${hex}`);
+
+            // Update color picker
+            const hexInput = document.getElementById('hex-input');
+            if (hexInput) {
+                console.log(`[DEBUG] Updating HEX input to ${hex}`);
+                hexInput.value = hex;
+                hexInput.dispatchEvent(new Event('input'));
+            } else {
+                console.warn('[DEBUG] HEX input not found!');
+            }
+
+            // Switch to pixel tool
+            console.log('[DEBUG] Switching to pixel tool');
+            this.selectTool('pixel-tool');
+            UIService.showMessage(`Color picked: ${hex}. Now use Pixel tool to paint.`, 'success');
+        });
     }
 
     async handleVectorize() {
@@ -309,6 +382,7 @@ class App {
         this.setupDocumentationListeners();
         this.setupZoomControls();
         this.setupSnapToGridControls();
+        this.setupExportControls();
     }
 
     setupFileUploadListeners() {
@@ -466,6 +540,18 @@ class App {
             if (!isNaN(initialSize) && initialSize > 0) {
                 this.canvasManager.setGridSize(initialSize);
             }
+        }
+    }
+
+    setupExportControls() {
+        const pngTransCheckbox = document.getElementById('png-transparent');
+        const pngBgControl = document.getElementById('png-bg-control');
+
+        if (pngTransCheckbox && pngBgControl) {
+            pngTransCheckbox.addEventListener('change', (e) => {
+                // Show background color control only when NOT transparent
+                pngBgControl.style.display = e.target.checked ? 'none' : 'block';
+            });
         }
     }
 
@@ -729,6 +815,8 @@ class App {
             const compressEl = document.getElementById('compress-export');
             const transEl = document.getElementById('include-transparency');
             const svgTransEl = document.getElementById('svg-transparent');
+            const pngTransEl = document.getElementById('png-transparent');
+            const pngBgColorEl = document.getElementById('png-bg-color');
 
             const exportSettings = {
                 preset: presetEl?.value || undefined,
@@ -739,6 +827,9 @@ class App {
                 includeTransparency: transEl ? transEl.checked : true,
                 // SVG transparency: false = opaque (white bg), true = transparent
                 transparency: svgTransEl ? svgTransEl.checked : true,
+                // PNG transparency: true = transparent background, false = colored background
+                transparent: pngTransEl ? pngTransEl.checked : false,
+                backgroundColor: pngBgColorEl?.value || 'white',
                 ...settings
             };
 

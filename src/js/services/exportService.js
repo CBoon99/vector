@@ -226,6 +226,7 @@ class ExportService {
     }
 
     async exportToRaster(vectorDoc, format, settings) {
+        console.log(`[DEBUG] Starting raster export: format=${format}, transparent=${settings.transparent}`);
         const dom = typeof document !== 'undefined' ? document : null;
         if (!dom || !vectorDoc) {
             throw new FileError('Invalid export context');
@@ -236,21 +237,37 @@ class ExportService {
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
+        console.log(`[DEBUG] Canvas created: ${w}x${h}`);
 
-        // Draw background (grid is NOT drawn here - grid only appears in interactive editing)
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Handle background for PNG/JPEG
+        const isTransparent = format === 'png' && settings.transparent;
+        console.log(`[DEBUG] isTransparent=${isTransparent}`);
+        if (!isTransparent) {
+            // Draw background color (default white, or custom color for non-transparent)
+            const bgColor = settings.backgroundColor || 'white';
+            console.log(`[DEBUG] Drawing background: ${bgColor}`);
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+            console.log('[DEBUG] Using transparent background (no fill)');
+        }
 
         const objects = vectorDoc.objects || [];
-        objects.forEach(obj => {
+        console.log(`[DEBUG] Drawing ${objects.length} objects`);
+        objects.forEach((obj, i) => {
+            console.log(`[DEBUG] Drawing object ${i}: type=${obj.type}`);
             this.drawObjectToCanvas(ctx, obj);
         });
 
         // Convert to requested format
         const mimeType = this.getMimeType(format);
+        console.log(`[DEBUG] MIME type: ${mimeType}, quality: ${settings.quality}`);
         return new Promise((resolve) => {
             canvas.toBlob(
-                (blob) => resolve(blob),
+                (blob) => {
+                    console.log(`[DEBUG] ${format.toUpperCase()} blob created: ${blob.size} bytes`);
+                    resolve(blob);
+                },
                 mimeType,
                 settings.quality
             );
@@ -546,47 +563,79 @@ class ExportService {
     }
 
     async exportToPDF(document, settings) {
-        const { jsPDF } = await import('jspdf');
-        const pdf = new jsPDF({
-            orientation: settings.orientation || 'portrait',
-            unit: 'pt',
-            format: settings.pageSize || 'a4'
-        });
+        try {
+            console.log('[DEBUG] Starting PDF export');
+            const { jsPDF } = await import('jspdf');
+            console.log('[DEBUG] jsPDF imported successfully');
 
-        // Set document properties
-        if (document.metadata) {
-            pdf.setProperties({
-                title: document.metadata.title || 'Untitled',
-                author: document.metadata.author || '',
-                subject: document.metadata.subject || '',
-                keywords: document.metadata.keywords || '',
-                creator: 'Vector Graphics Editor'
+            // Create canvas rendering of the document
+            const dom = typeof window !== 'undefined' ? window.document : null;
+            if (!dom) {
+                throw new FileError('Invalid export context');
+            }
+
+            const canvas = dom.createElement('canvas');
+            const w = document.width || 800;
+            const h = document.height || 600;
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            console.log(`[DEBUG] Created canvas: ${w}x${h}`);
+
+            // Draw white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw all objects
+            const objects = document.objects || [];
+            console.log(`[DEBUG] Drawing ${objects.length} objects to canvas`);
+            objects.forEach((obj, i) => {
+                console.log(`[DEBUG] Drawing object ${i}: type=${obj.type}`);
+                this.drawObjectToCanvas(ctx, obj);
             });
-        }
 
-        // Handle multi-page documents
-        const pages = this.splitDocumentIntoPages(document, settings);
-        for (let i = 0; i < pages.length; i++) {
-            if (i > 0) pdf.addPage();
-            await this.drawPageToPDF(pdf, pages[i], settings);
-        }
+            // Convert canvas to image data
+            console.log('[DEBUG] Converting canvas to PNG data URL');
+            const imgData = canvas.toDataURL('image/png');
+            console.log(`[DEBUG] Image data size: ${imgData.length} bytes`);
 
-        // Apply security settings
-        if (settings.security) {
-            this.applyPDFSecurity(pdf, settings.security);
-        }
+            // Create PDF with the image
+            console.log('[DEBUG] Creating PDF document');
+            const pdf = new jsPDF({
+                orientation: w > h ? 'landscape' : 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            console.log('[DEBUG] PDF document created');
 
-        // Apply digital signature if provided
-        if (settings.signature) {
-            await this.applyDigitalSignature(pdf, settings.signature);
-        }
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            console.log(`[DEBUG] PDF page size: ${pdfWidth}x${pdfHeight} mm`);
 
-        // Apply compression if requested
-        if (settings.compression) {
-            pdf.compress = true;
-        }
+            // Calculate scaling to fit on page
+            const scale = Math.min(pdfWidth / (w / 96 * 25.4), pdfHeight / (h / 96 * 25.4));
+            const imgWidth = (w / 96 * 25.4) * scale;
+            const imgHeight = (h / 96 * 25.4) * scale;
+            console.log(`[DEBUG] Image dimensions: ${imgWidth}x${imgHeight} mm, scale: ${scale}`);
 
-        return pdf.output('blob');
+            // Center on page
+            const x = (pdfWidth - imgWidth) / 2;
+            const y = (pdfHeight - imgHeight) / 2;
+            console.log(`[DEBUG] Image position: (${x}, ${y}) mm`);
+
+            console.log('[DEBUG] Adding image to PDF');
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+            console.log('[DEBUG] Image added to PDF');
+
+            console.log('[DEBUG] Generating PDF blob');
+            const blob = pdf.output('blob');
+            console.log(`[DEBUG] PDF blob created: ${blob.size} bytes`);
+            return blob;
+        } catch (error) {
+            console.error('[DEBUG] PDF export error:', error);
+            console.error('[DEBUG] Error stack:', error.stack);
+            throw error;
+        }
     }
 
     splitDocumentIntoPages(document, settings) {
@@ -642,116 +691,6 @@ class ExportService {
             legal: { width: 612, height: 1008 }
         };
         return sizes[format] || sizes.a4;
-    }
-
-    async drawPageToPDF(pdf, page, settings) {
-        // Calculate scaling to fit content on page
-        const scale = Math.min(
-            (page.width - 40) / page.width,
-            (page.height - 40) / page.height
-        );
-
-        // Center content on page
-        const offsetX = (page.width - page.width * scale) / 2;
-        const offsetY = (page.height - page.height * scale) / 2;
-
-        // Draw each object
-        for (const obj of page.objects) {
-            await this.drawObjectToPDF(pdf, obj, scale, offsetX, offsetY);
-        }
-    }
-
-    async drawObjectToPDF(pdf, obj, scale, offsetX, offsetY) {
-        const x = (obj.x || 0) * scale + offsetX;
-        const y = (obj.y || 0) * scale + offsetY;
-        const w = (obj.width || 0) * scale;
-        const h = (obj.height || 0) * scale;
-
-        try {
-            switch (obj.type) {
-                case 'raster':
-                    if (obj.image) {
-                        const dataUrl = this.imageToDataURL(obj.image);
-                        if (dataUrl) {
-                            pdf.addImage(dataUrl, 'PNG', x, y, w, h);
-                        }
-                    }
-                    break;
-
-                case 'rectangle':
-                    if (obj.fill) {
-                        pdf.setFillColor(...this.hexToRgb(obj.fill));
-                        pdf.rect(x, y, w, h, 'F');
-                    }
-                    if (obj.stroke) {
-                        pdf.setDrawColor(...this.hexToRgb(obj.stroke.color));
-                        pdf.setLineWidth((obj.stroke.width || 1) * scale);
-                        pdf.rect(x, y, w, h, 'S');
-                    }
-                    break;
-
-                case 'circle':
-                    const radius = (obj.radius || 0) * scale;
-                    const cx = (obj.cx || 0) * scale + offsetX;
-                    const cy = (obj.cy || 0) * scale + offsetY;
-                    if (obj.fill) {
-                        pdf.setFillColor(...this.hexToRgb(obj.fill));
-                        pdf.circle(cx, cy, radius, 'F');
-                    }
-                    if (obj.stroke) {
-                        pdf.setDrawColor(...this.hexToRgb(obj.stroke.color));
-                        pdf.setLineWidth((obj.stroke.width || 1) * scale);
-                        pdf.circle(cx, cy, radius, 'S');
-                    }
-                    break;
-
-                case 'path':
-                    if (obj.points && obj.points.length > 0) {
-                        const scaledPoints = obj.points.map(p => ({
-                            x: (p.x || 0) * scale + offsetX,
-                            y: (p.y || 0) * scale + offsetY
-                        }));
-
-                        pdf.moveTo(scaledPoints[0].x, scaledPoints[0].y);
-                        for (let i = 1; i < scaledPoints.length; i++) {
-                            pdf.lineTo(scaledPoints[i].x, scaledPoints[i].y);
-                        }
-
-                        if (obj.fill) {
-                            pdf.setFillColor(...this.hexToRgb(obj.fill));
-                        }
-                        if (obj.stroke) {
-                            pdf.setDrawColor(...this.hexToRgb(obj.stroke.color));
-                            pdf.setLineWidth((obj.stroke.width || 1) * scale);
-                        }
-                        pdf.stroke();
-                    }
-                    break;
-
-                case 'text':
-                    if (obj.text) {
-                        if (obj.fill) {
-                            pdf.setTextColor(...this.hexToRgb(obj.fill));
-                        }
-                        const fontSize = (obj.font?.size || 12) * scale;
-                        pdf.setFontSize(fontSize);
-                        pdf.text(obj.text, x, y);
-                    }
-                    break;
-            }
-        } catch (e) {
-            console.warn('Failed to draw object to PDF:', e);
-        }
-    }
-
-    hexToRgb(hex) {
-        if (!hex) return [0, 0, 0];
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? [
-            parseInt(result[1], 16),
-            parseInt(result[2], 16),
-            parseInt(result[3], 16)
-        ] : [0, 0, 0];
     }
 
     applyPDFSecurity(pdf, security) {

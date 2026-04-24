@@ -882,3 +882,24 @@ html[data-theme="light"] {
     color: var(--app-text) !important;
     border-radius: var(--app-radius-sm) !important;
 }
+
+/* —— v2 Features (Coming Soon) —— */
+[data-feature="v2"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    position: relative;
+}
+
+[data-feature="v2"]::after {
+    content: 'v2';
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: rgba(232, 145, 58, 0.3);
+    color: var(--app-accent);
+    padding: 1px 4px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
