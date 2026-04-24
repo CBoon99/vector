@@ -728,6 +728,7 @@ class App {
             const stylesEl = document.getElementById('include-styles');
             const compressEl = document.getElementById('compress-export');
             const transEl = document.getElementById('include-transparency');
+            const svgTransEl = document.getElementById('svg-transparent');
 
             const exportSettings = {
                 preset: presetEl?.value || undefined,
@@ -736,6 +737,8 @@ class App {
                 includeStyles: stylesEl ? stylesEl.checked : true,
                 compression: compressEl ? compressEl.checked : true,
                 includeTransparency: transEl ? transEl.checked : true,
+                // SVG transparency: false = opaque (white bg), true = transparent
+                transparency: svgTransEl ? svgTransEl.checked : true,
                 ...settings
             };
 

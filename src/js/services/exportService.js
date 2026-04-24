@@ -190,6 +190,18 @@ class ExportService {
         svg.setAttribute('width', w);
         svg.setAttribute('height', h);
         svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+        // Add transparent background by default (unless explicitly set to opaque)
+        const hasTransparency = settings.transparency !== false;
+        if (!hasTransparency) {
+            const bg = dom.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', w);
+            bg.setAttribute('height', h);
+            bg.setAttribute('fill', 'white');
+            svg.appendChild(bg);
+        }
 
         if (settings.includeMetadata) {
             const metadata = dom.createElementNS('http://www.w3.org/2000/svg', 'metadata');
@@ -258,7 +270,7 @@ class ExportService {
 
     drawObjectToCanvas(ctx, object) {
         ctx.save();
-        
+
         // Apply transformations
         if (object.transform) {
             ctx.translate(object.transform.x || 0, object.transform.y || 0);
@@ -277,6 +289,9 @@ class ExportService {
 
         // Draw based on object type
         switch (object.type) {
+            case 'raster':
+                this.drawRaster(ctx, object);
+                break;
             case 'rectangle':
                 this.drawRectangle(ctx, object);
                 break;
@@ -295,6 +310,15 @@ class ExportService {
         }
 
         ctx.restore();
+    }
+
+    drawRaster(ctx, object) {
+        if (!object.image) return;
+        try {
+            ctx.drawImage(object.image, object.x || 0, object.y || 0, object.width || 0, object.height || 0);
+        } catch (e) {
+            console.warn('Failed to draw raster image:', e);
+        }
     }
 
     drawRectangle(ctx, object) {
@@ -397,6 +421,23 @@ class ExportService {
         let element;
 
         switch (object.type) {
+            case 'raster':
+                // Handle imported bitmap images
+                element = document.createElementNS(ns, 'image');
+                element.setAttribute('x', object.x || 0);
+                element.setAttribute('y', object.y || 0);
+                element.setAttribute('width', object.width || 0);
+                element.setAttribute('height', object.height || 0);
+
+                // Convert image to data URL if it's an HTMLImageElement
+                if (object.image) {
+                    const dataUrl = this.imageToDataURL(object.image);
+                    if (dataUrl) {
+                        element.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl);
+                    }
+                }
+                break;
+
             case 'rectangle':
                 element = document.createElementNS(ns, 'rect');
                 element.setAttribute('x', object.x);
@@ -448,14 +489,39 @@ class ExportService {
         }
 
         if (element) {
-            if (object.fill) element.setAttribute('fill', object.fill);
-            if (object.stroke) {
+            if (object.fill && object.type !== 'raster') element.setAttribute('fill', object.fill);
+            if (object.stroke && object.type !== 'raster') {
                 element.setAttribute('stroke', object.stroke.color);
                 element.setAttribute('stroke-width', object.stroke.width);
             }
         }
 
         return element;
+    }
+
+    imageToDataURL(imageElement) {
+        if (!imageElement) return null;
+        try {
+            // If it's already a data URL or URL, use it directly
+            if (typeof imageElement === 'string') {
+                return imageElement;
+            }
+            // If it's an HTMLImageElement, draw it to canvas and convert to data URL
+            if (imageElement instanceof HTMLImageElement) {
+                const canvas = document.createElement('canvas');
+                canvas.width = imageElement.naturalWidth || imageElement.width;
+                canvas.height = imageElement.naturalHeight || imageElement.height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(imageElement, 0, 0);
+                    return canvas.toDataURL('image/png');
+                }
+            }
+            return null;
+        } catch (e) {
+            console.warn('Failed to convert image to data URL:', e);
+            return null;
+        }
     }
 
     generatePathData(points, isClosed) {
@@ -591,8 +657,101 @@ class ExportService {
 
         // Draw each object
         for (const obj of page.objects) {
-            this.drawObjectToPDF(pdf, obj, scale, offsetX, offsetY);
+            await this.drawObjectToPDF(pdf, obj, scale, offsetX, offsetY);
         }
+    }
+
+    async drawObjectToPDF(pdf, obj, scale, offsetX, offsetY) {
+        const x = (obj.x || 0) * scale + offsetX;
+        const y = (obj.y || 0) * scale + offsetY;
+        const w = (obj.width || 0) * scale;
+        const h = (obj.height || 0) * scale;
+
+        try {
+            switch (obj.type) {
+                case 'raster':
+                    if (obj.image) {
+                        const dataUrl = this.imageToDataURL(obj.image);
+                        if (dataUrl) {
+                            pdf.addImage(dataUrl, 'PNG', x, y, w, h);
+                        }
+                    }
+                    break;
+
+                case 'rectangle':
+                    if (obj.fill) {
+                        pdf.setFillColor(...this.hexToRgb(obj.fill));
+                        pdf.rect(x, y, w, h, 'F');
+                    }
+                    if (obj.stroke) {
+                        pdf.setDrawColor(...this.hexToRgb(obj.stroke.color));
+                        pdf.setLineWidth((obj.stroke.width || 1) * scale);
+                        pdf.rect(x, y, w, h, 'S');
+                    }
+                    break;
+
+                case 'circle':
+                    const radius = (obj.radius || 0) * scale;
+                    const cx = (obj.cx || 0) * scale + offsetX;
+                    const cy = (obj.cy || 0) * scale + offsetY;
+                    if (obj.fill) {
+                        pdf.setFillColor(...this.hexToRgb(obj.fill));
+                        pdf.circle(cx, cy, radius, 'F');
+                    }
+                    if (obj.stroke) {
+                        pdf.setDrawColor(...this.hexToRgb(obj.stroke.color));
+                        pdf.setLineWidth((obj.stroke.width || 1) * scale);
+                        pdf.circle(cx, cy, radius, 'S');
+                    }
+                    break;
+
+                case 'path':
+                    if (obj.points && obj.points.length > 0) {
+                        const scaledPoints = obj.points.map(p => ({
+                            x: (p.x || 0) * scale + offsetX,
+                            y: (p.y || 0) * scale + offsetY
+                        }));
+
+                        pdf.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+                        for (let i = 1; i < scaledPoints.length; i++) {
+                            pdf.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+                        }
+
+                        if (obj.fill) {
+                            pdf.setFillColor(...this.hexToRgb(obj.fill));
+                        }
+                        if (obj.stroke) {
+                            pdf.setDrawColor(...this.hexToRgb(obj.stroke.color));
+                            pdf.setLineWidth((obj.stroke.width || 1) * scale);
+                        }
+                        pdf.stroke();
+                    }
+                    break;
+
+                case 'text':
+                    if (obj.text) {
+                        if (obj.fill) {
+                            pdf.setTextColor(...this.hexToRgb(obj.fill));
+                        }
+                        const fontSize = (obj.font?.size || 12) * scale;
+                        pdf.setFontSize(fontSize);
+                        pdf.text(obj.text, x, y);
+                    }
+                    break;
+            }
+        } catch (e) {
+            console.warn('Failed to draw object to PDF:', e);
+        }
+    }
+
+    hexToRgb(hex) {
+        if (!hex) return [0, 0, 0];
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16),
+            parseInt(result[2], 16),
+            parseInt(result[3], 16)
+        ] : [0, 0, 0];
     }
 
     applyPDFSecurity(pdf, security) {
