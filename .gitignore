@@ -33,4 +33,4 @@ coverage/
 
 # Local legacy dump; README in this folder is tracked
 old-doc/*
-!old-doc/README.md
+!old-doc/README.mdTODO.md
