@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
+    "dev": "webpack serve --mode development",
+    "preview": "npm run build && node server.js",
     "build": "webpack --mode=production",
     "test": "jest --config jest.config.cjs",
     "lint": "eslint --config .eslintrc.cjs src/js/app.js src/js/core/layerManager.js src/js/core/stateManager.js src/js/core/tool-feedback.js src/js/ui/onboarding.js src/js/services/cellularVectorize.js src/js/services/pixelEditService.js src/js/services/fileImportService.js"

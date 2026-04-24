@@ -24,7 +24,7 @@ import FileImportService from './services/fileImportService.js';
 import * as pixelEdit from './services/pixelEditService.js';
 import VectorizationService from './services/vectorizationService.js';
 import ExportService from './services/exportService.js';
-import DocumentationService from './services/documentationService.js';
+import documentationService from './services/documentationService.js';
 import { LayerPanel } from './components/layer-panel.js';
 import SmartShapeTool from './tools/smart-shape-tool.js';
 import SmartConstraintsTool from './tools/smart-constraints-tool.js';
@@ -74,7 +74,7 @@ class App {
         this.stateManager.setCanvasManager(this.canvasManager);
 
         // Initialize services
-        this.documentationService = new DocumentationService();
+        this.documentationService = documentationService;
 
         // Initialize layer panel
         this.layerPanel = new LayerPanel(this.layerManager, this.stateManager);
@@ -169,6 +169,9 @@ class App {
         rasterizeGroup.appendChild(rasterizeButton);
         
         const controlsGrid = document.querySelector('.controls-grid');
+        if (!controlsGrid) {
+            return;
+        }
         controlsGrid.appendChild(rasterizeGroup);
 
         rasterizeButton.addEventListener('click', () => this.autoRasterize());
@@ -216,6 +219,9 @@ class App {
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-upload');
         const browseButton = document.getElementById('browse-button');
+        if (!uploadArea || !fileInput || !browseButton) {
+            return;
+        }
 
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -250,10 +256,9 @@ class App {
                 this.selectTool(toolId);
                 
                 // Update tool-specific UI
-                if (toolId === 'shape-tool') {
-                    document.getElementById('shape-controls').style.display = 'block';
-                } else {
-                    document.getElementById('shape-controls').style.display = 'none';
+                const shapeControls = document.getElementById('shape-controls');
+                if (shapeControls) {
+                    shapeControls.style.display = toolId === 'shape-tool' ? 'block' : 'none';
                 }
             });
         });
@@ -306,14 +311,31 @@ class App {
         }
         for (const file of fileList) {
             try {
-                const result = await FileImportService.importFile(file, {
+                const rasterOnly = document.getElementById('import-raster-only')?.checked;
+                const opts = {
                     cellPoster: document.getElementById('import-cell-poster')?.checked,
-                    rasterOnly: document.getElementById('import-raster-only')?.checked
-                });
-                const list = Array.isArray(result) ? result : result ? [result] : [];
+                    rasterOnly
+                };
+                let result = await FileImportService.importFile(file, opts);
+                let list = Array.isArray(result) ? result : result ? [result] : [];
+                const mime = (file.type || '').toLowerCase();
+                const lowerName = (file.name || '').toLowerCase();
+                const isSvg = mime.includes('svg') || lowerName.endsWith('.svg');
+                const looksLikeRaster =
+                    (mime.startsWith('image/') && !isSvg) ||
+                    /\.(png|jpe?g|gif|webp|bmp|tiff?)$/i.test(lowerName);
+                if (!list.length && looksLikeRaster && !rasterOnly) {
+                    result = await FileImportService.importFile(file, {
+                        ...opts,
+                        rasterOnly: true,
+                        cellPoster: false
+                    });
+                    list = Array.isArray(result) ? result : result ? [result] : [];
+                }
                 if (list.length) {
                     this.layerManager.addObjects(list);
                     this.canvasManager.draw();
+                    requestAnimationFrame(() => this.canvasManager.draw());
                     this.showImageUploadFeedback(file);
                     UIService.showMessage('Added to canvas', 'success');
                 } else {
@@ -754,49 +776,59 @@ class App {
     }
 
     setupLayerControls() {
-        document.getElementById('add-layer').onclick = () => {
+        const on = (id, fn) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('click', fn);
+            }
+        };
+        on('add-layer', () => {
             this.layerManager.addLayer();
             UIService.showMessage('Layer added', 'success');
-        };
-        document.getElementById('delete-layer').onclick = () => {
+        });
+        on('delete-layer', () => {
             this.layerManager.deleteActiveLayer();
             UIService.showMessage('Layer deleted', 'success');
-        };
-        document.getElementById('duplicate-layer').onclick = () => {
+        });
+        on('duplicate-layer', () => {
             this.layerManager.duplicateActiveLayer();
             UIService.showMessage('Layer duplicated', 'success');
-        };
-        document.getElementById('rename-layer').onclick = () => {
+        });
+        on('rename-layer', () => {
             const name = prompt('Enter new layer name:');
             if (name) {
                 this.layerManager.renameActiveLayer(name);
                 UIService.showMessage('Layer renamed', 'success');
             }
-        };
-        document.getElementById('toggle-layer-visibility').onclick = () => {
+        });
+        on('toggle-layer-visibility', () => {
             this.layerManager.toggleVisibility();
             this.renderLayerList();
-        };
-        document.getElementById('toggle-layer-lock').onclick = () => {
+        });
+        on('toggle-layer-lock', () => {
             this.layerManager.toggleLock();
             this.renderLayerList();
-        };
-        document.getElementById('move-layer-up').onclick = () => {
+        });
+        on('move-layer-up', () => {
             this.layerManager.moveLayerUp();
             this.renderLayerList();
-        };
-        document.getElementById('move-layer-down').onclick = () => {
+        });
+        on('move-layer-down', () => {
             this.layerManager.moveLayerDown();
             this.renderLayerList();
-        };
-        document.getElementById('group-layers').onclick = () => {
+        });
+        on('group-layers', () => {
             this.layerManager.groupSelectedLayers();
             UIService.showMessage('Layers grouped', 'success');
-        };
-        document.getElementById('ungroup-layers').onclick = () => {
+        });
+        on('add-group', () => {
+            this.layerManager.groupSelectedLayers();
+            UIService.showMessage('Layers grouped', 'success');
+        });
+        on('ungroup-layers', () => {
             this.layerManager.ungroupSelectedLayers();
             UIService.showMessage('Layers ungrouped', 'success');
-        };
+        });
     }
 
     initializeTools() {

@@ -4,16 +4,6 @@
  * Provides feature flags based on device performance and connection quality
  */
 
-// Create a proxy to make flags readonly
-const createReadOnlyFlags = (flags) => {
-  return new Proxy(flags, {
-    set: () => {
-      console.warn('[EnvironmentManager] Attempted to modify readonly flags');
-      return true;
-    }
-  });
-};
-
 // Generate a unique session ID
 const generateSessionId = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -30,7 +20,7 @@ export const EnvironmentManager = {
   isSlowConnection: false,
   isMobile: false,
   isForceFullMode: false,
-  flags: createReadOnlyFlags({
+  flags: {
     disableAutoPlay: false,
     disableRealTime: false,
     disableExport: false,
@@ -45,7 +35,7 @@ export const EnvironmentManager = {
     disableUndoHistory: false,
     disableGPUAcceleration: false,
     disableAutoSave: false
-  }),
+  },
 
   /**
    * Initialize the environment manager

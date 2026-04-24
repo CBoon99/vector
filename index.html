@@ -47,14 +47,14 @@
                 <div class="app-rail__scroll">
                     <section id="upload-section">
                         <div id="upload-area">
-                            <p>Drag and drop an image (JPG, PNG, WebP&hellip;) or <strong>SVG</strong>. Trace vectorization runs by default; use options below to change behaviour.</p>
+                            <p>Drag and drop an image (JPG, PNG, WebP&hellip;) or <strong>SVG</strong>. <strong>Bitmap</strong> import is the default so your image appears on the canvas; uncheck to trace vectorize instead.</p>
                             <div class="import-options">
-                                <label class="import-option"><input type="checkbox" id="import-raster-only" /> Bitmap only (no vectorization, best for pixel paint)</label>
+                                <label class="import-option"><input type="checkbox" id="import-raster-only" checked /> Bitmap only (place the image on the canvas; use Pixel tool to paint)</label>
                                 <label class="import-option"><input type="checkbox" id="import-cell-poster" /> Cell poster only (fast blocks, skip edge trace)</label>
                             </div>
                             <p class="hint">After a <em>Bitmap only</em> import, pick <strong>Pixel</strong> in the toolbar and draw on the image with the current HEX color.</p>
                             <button type="button" id="browse-button" class="button">Browse files</button>
-                            <input type="file" id="file-upload" accept="image/jpeg,image/png,image/svg+xml,application/json,.dopple" class="hidden" />
+                            <input type="file" id="file-upload" accept="image/*,image/svg+xml,application/json,.dopple" class="hidden" />
                             <p id="upload-instructions" class="hidden"></p>
                             <div id="progress-bar" class="hidden">
                                 <div id="progress-fill"></div>
@@ -177,7 +177,7 @@
                         <div class="controls-grid">
                             <div class="control-group control-group--filename">
                                 <label for="filename">Filename</label>
-                                <input type="text" id="filename" value="vectorized" aria-label="Export filename" pattern="[-0-9A-Za-z_]+" />
+                                <input type="text" id="filename" value="vectorized" aria-label="Export filename" />
                             </div>
                             <div class="control-group">
                                 <button type="button" id="export-png" class="button" data-feature="basicExport">PNG</button>

@@ -154,6 +154,19 @@ export class CanvasManager {
         this.initializeMemoryManagement();
         this.setupResizeObserver();
         this.startPerformanceMonitoring();
+        requestAnimationFrame(() => this.syncCanvasSizeFromLayout());
+    }
+
+    /** When ResizeObserver reports 0×0 (flex not ready), still get a drawable bitmap. */
+    syncCanvasSizeFromLayout() {
+        const r = this.canvas.getBoundingClientRect();
+        if (r.width >= 1 && r.height >= 1) {
+            this.handleResize({ width: r.width, height: r.height });
+        } else {
+            const w = parseInt(this.canvas.getAttribute('width'), 10) || 800;
+            const h = parseInt(this.canvas.getAttribute('height'), 10) || 600;
+            this.handleResize({ width: w, height: h });
+        }
     }
 
     initializeWebGL() {
@@ -355,19 +368,25 @@ export class CanvasManager {
     }
 
     handleResize(rect) {
-        // Update canvas size
-        this.canvas.width = rect.width * window.devicePixelRatio;
-        this.canvas.height = rect.height * window.devicePixelRatio;
-        this.canvas.style.width = `${rect.width}px`;
-        this.canvas.style.height = `${rect.height}px`;
+        const dpr = window.devicePixelRatio || 1;
+        let rw = rect.width;
+        let rh = rect.height;
+        if (!rw || !rh) {
+            rw = this.canvas.clientWidth || parseInt(this.canvas.getAttribute('width'), 10) || 800;
+            rh = this.canvas.clientHeight || parseInt(this.canvas.getAttribute('height'), 10) || 600;
+        }
+        rw = Math.max(1, rw);
+        rh = Math.max(1, rh);
 
-        // Update buffer
+        this.canvas.width = Math.floor(rw * dpr);
+        this.canvas.height = Math.floor(rh * dpr);
+        this.canvas.style.width = `${rw}px`;
+        this.canvas.style.height = `${rh}px`;
+
         this.resizeBuffer();
 
-        // Mark all layers as dirty
         this.dirtyLayers = new Set(this.layers.keys());
-        
-        // Redraw
+
         this.scheduleDraw();
     }
 

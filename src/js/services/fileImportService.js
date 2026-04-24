@@ -159,35 +159,43 @@ class FileImportService {
         throw new FileError('AI processing not yet implemented');
     }
 
+    /**
+     * @param {HTMLImageElement} image
+     * @returns {Array<Record<string, unknown>>}
+     */
+    _rasterObjectFromImage(image) {
+        const nw = image.naturalWidth || image.width;
+        const nh = image.naturalHeight || image.height;
+        if (!nw || !nh) {
+            return [];
+        }
+        const maxW = 800;
+        const maxH = 600;
+        let w = nw;
+        let h = nh;
+        if (w > maxW || h > maxH) {
+            const s = Math.min(maxW / w, maxH / h, 1);
+            w = Math.max(1, Math.floor(w * s));
+            h = Math.max(1, Math.floor(h * s));
+        }
+        return [
+            {
+                type: 'raster',
+                id: generateId('raster'),
+                x: 0,
+                y: 0,
+                width: w,
+                height: h,
+                image
+            }
+        ];
+    }
+
     async processRaster(file) {
         const opts = this._importOptions || {};
         const image = await this.loadImage(file);
         if (opts.rasterOnly) {
-            const nw = image.naturalWidth || image.width;
-            const nh = image.naturalHeight || image.height;
-            if (!nw || !nh) {
-                return [];
-            }
-            const maxW = 800;
-            const maxH = 600;
-            let w = nw;
-            let h = nh;
-            if (w > maxW || h > maxH) {
-                const s = Math.min(maxW / w, maxH / h, 1);
-                w = Math.max(1, Math.floor(w * s));
-                h = Math.max(1, Math.floor(h * s));
-            }
-            return [
-                {
-                    type: 'raster',
-                    id: generateId('raster'),
-                    x: 0,
-                    y: 0,
-                    width: w,
-                    height: h,
-                    image
-                }
-            ];
+            return this._rasterObjectFromImage(image);
         }
         if (opts.cellPoster) {
             return cellularVectorizeFromImage(image, {
@@ -206,20 +214,33 @@ class FileImportService {
         } catch (e) {
             /* fall through to cell poster */
         }
-        return cellularVectorizeFromImage(image, { maxSide: 100, cellSize: 10 });
+        const fromCells = cellularVectorizeFromImage(image, { maxSide: 100, cellSize: 10 });
+        if (fromCells && fromCells.length) {
+            return fromCells;
+        }
+        return this._rasterObjectFromImage(image);
     }
 
     async loadImage(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            
+
             reader.onload = (e) => {
                 const img = new Image();
-                img.onload = () => resolve(img);
+                img.onload = () => {
+                    if (typeof img.decode === 'function') {
+                        img
+                            .decode()
+                            .then(() => resolve(img))
+                            .catch(() => resolve(img));
+                    } else {
+                        resolve(img);
+                    }
+                };
                 img.onerror = () => reject(new FileError('Failed to load image'));
                 img.src = e.target.result;
             };
-            
+
             reader.onerror = () => reject(new FileError('Failed to read file'));
             reader.readAsDataURL(file);
         });

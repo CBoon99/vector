@@ -257,6 +257,9 @@ export class LayerManager {
                             const w = width != null ? width : im.naturalWidth;
                             const h = height != null ? height : im.naturalHeight;
                             ctx.drawImage(im, x, y, w, h);
+                            if (typeof window !== 'undefined' && window.doppleitApp?.canvasManager) {
+                                requestAnimationFrame(() => window.doppleitApp.canvasManager.draw());
+                            }
                         };
                         im.addEventListener('load', drawWhenReady, { once: true });
                     }
