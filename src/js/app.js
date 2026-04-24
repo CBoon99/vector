@@ -178,6 +178,12 @@ class App {
             tempCanvas.height = this.canvasManager.canvas.height;
             const tempCtx = tempCanvas.getContext('2d');
 
+            if (!tempCtx) {
+                console.error('[DEBUG] Eyedropper: Failed to get canvas context');
+                UIService.showMessage('Eyedropper failed: cannot access canvas', 'error');
+                return;
+            }
+
             // Draw all objects to temp canvas
             const objects = this.layerManager.getAllObjects();
             console.log(`[DEBUG] Drawing ${objects.length} objects to temp canvas`);
@@ -704,7 +710,16 @@ class App {
     handleDrawStart(point) {
         try {
             if (this.stateManager.currentTool === 'pixel-tool') {
-                console.log(`[DEBUG] Pixel tool: Click at (${point.x}, ${point.y}), color: ${this.getStrokeColor()}`);
+                const color = this.getStrokeColor();
+                console.log(`[DEBUG] Pixel tool: Click at (${point.x}, ${point.y}), color: ${color}`);
+
+                // Validate color
+                if (!color || color.toLowerCase() === 'undefined') {
+                    console.warn('[DEBUG] Pixel tool: Invalid color selected');
+                    UIService.showMessage('Please select a color first', 'warning');
+                    return;
+                }
+
                 const obj = pixelEdit.findRasterUnderPoint(
                     this.layerManager.getLayers(),
                     point.x,
@@ -712,7 +727,7 @@ class App {
                 );
                 if (obj) {
                     console.log(`[DEBUG] Found raster at (${obj.x}, ${obj.y}) size ${obj.width}x${obj.height}`);
-                    pixelEdit.paintPixelOnRaster(obj, point.x, point.y, this.getStrokeColor());
+                    pixelEdit.paintPixelOnRaster(obj, point.x, point.y, color);
                     this.canvasManager.draw();
                 } else {
                     console.warn(`[DEBUG] No raster found under point (${point.x}, ${point.y})`);
