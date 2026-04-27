@@ -26,6 +26,14 @@ export class CanvasManager {
         this.offsetX = 0;
         this.offsetY = 0;
 
+        // World bounds to prevent zoom/pan from losing content
+        this.bounds = {
+            minX: -10000,
+            minY: -10000,
+            maxX: 10000,
+            maxY: 10000
+        };
+
         // Snap-to-grid (driven by UI in app.js)
         this.snapToGrid = false;
         this.gridSize = 8;
@@ -901,6 +909,8 @@ export class CanvasManager {
                 // Pan the canvas when shift is held
                 this.offsetX += dx * this.scale;
                 this.offsetY += dy * this.scale;
+                // Constrain viewport to stay within bounds
+                this.constrainViewport();
                 this.scheduleDraw();
                 if (this.onPan) {
                     this.onPan(this.offsetX, this.offsetY);
@@ -957,17 +967,20 @@ export class CanvasManager {
         this.pendingZoom = false;
         const delta = event.deltaY > 0 ? 0.9 : 1.1;
         const pos = this.getMousePosition(event);
-        
+
         // Calculate new scale
         const newScale = this.scale * delta;
-        
+
         // Limit scale between 0.1 and 10
         if (newScale >= 0.1 && newScale <= 10) {
             // Calculate new offset to zoom towards mouse position
             this.offsetX = pos.x - (pos.x - this.offsetX) * delta;
             this.offsetY = pos.y - (pos.y - this.offsetY) * delta;
             this.scale = newScale;
-            
+
+            // Constrain viewport to stay within bounds
+            this.constrainViewport();
+
             this.scheduleDraw();
             if (this.onZoom) {
                 this.onZoom(this.scale, pos);
@@ -1040,6 +1053,8 @@ export class CanvasManager {
                 // Pan the canvas
                 this.offsetX += dx * this.scale;
                 this.offsetY += dy * this.scale;
+                // Constrain viewport to stay within bounds
+                this.constrainViewport();
                 this.scheduleDraw();
                 if (this.onPan) {
                     this.onPan(this.offsetX, this.offsetY);
@@ -1051,10 +1066,12 @@ export class CanvasManager {
             // Pinch zoom
             const currentDistance = this.getPinchDistance(event.touches);
             const scale = this.initialScale * (currentDistance / this.initialPinchDistance);
-            
+
             // Limit scale between 0.1 and 10
             if (scale >= 0.1 && scale <= 10) {
                 this.scale = scale;
+                // Constrain viewport to stay within bounds
+                this.constrainViewport();
                 this.scheduleDraw();
                 if (this.onZoom) {
                     const center = this.getPinchCenter(event.touches);
@@ -1134,6 +1151,9 @@ export class CanvasManager {
         this.offsetX = centerScreenX - centerWorldX * newScale;
         this.offsetY = centerScreenY - centerWorldY * newScale;
 
+        // Constrain viewport to stay within bounds
+        this.constrainViewport();
+
         console.log(`[DEBUG] Zoom changed: ${oldScale.toFixed(2)} → ${newScale.toFixed(2)}, offset: (${this.offsetX.toFixed(0)}, ${this.offsetY.toFixed(0)})`);
         this.scheduleDraw();
     }
@@ -1151,6 +1171,86 @@ export class CanvasManager {
     // Reset zoom to 100%
     resetZoom() {
         this.setZoom(1);
+    }
+
+    /**
+     * Set the world bounds to prevent zoom/pan from losing content
+     * @param {Object} bounds - { minX, minY, maxX, maxY }
+     */
+    setBounds(bounds) {
+        if (bounds && typeof bounds === 'object') {
+            this.bounds = {
+                minX: bounds.minX || 0,
+                minY: bounds.minY || 0,
+                maxX: bounds.maxX || 1000,
+                maxY: bounds.maxY || 1000
+            };
+        }
+    }
+
+    /**
+     * Constrain viewport to stay within world bounds
+     * Prevents panning/zooming from moving the viewport outside the content area
+     */
+    constrainViewport() {
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+
+        // Calculate visible world bounds in screen coordinates
+        const viewportWorldX = -this.offsetX / this.scale;
+        const viewportWorldY = -this.offsetY / this.scale;
+        const viewportWorldWidth = canvasWidth / this.scale;
+        const viewportWorldHeight = canvasHeight / this.scale;
+
+        // Calculate the edges of content in world space
+        const contentMinX = this.bounds.minX;
+        const contentMinY = this.bounds.minY;
+        const contentMaxX = this.bounds.maxX;
+        const contentMaxY = this.bounds.maxY;
+        const contentWidth = contentMaxX - contentMinX;
+        const contentHeight = contentMaxY - contentMinY;
+
+        // Constrain viewport so it doesn't go beyond content bounds
+        let newOffsetX = this.offsetX;
+        let newOffsetY = this.offsetY;
+
+        // Case 1: Content is larger than viewport - prevent panning past edges
+        if (viewportWorldWidth < contentWidth) {
+            // Prevent panning left beyond content
+            if (viewportWorldX < contentMinX) {
+                newOffsetX = contentMinX * this.scale;
+            }
+            // Prevent panning right beyond content
+            if (viewportWorldX + viewportWorldWidth > contentMaxX) {
+                newOffsetX = (contentMaxX - viewportWorldWidth) * this.scale;
+            }
+        } else {
+            // Case 2: Content is smaller than viewport - center it
+            // Transform: screenX = worldX * scale + offsetX
+            // For center: screenCenter = contentCenter * scale + offsetX
+            // offsetX = screenCenter - contentCenter * scale
+            const contentCenterX = (contentMinX + contentMaxX) / 2;
+            newOffsetX = canvasWidth / 2 - contentCenterX * this.scale;
+        }
+
+        // Same logic for Y
+        if (viewportWorldHeight < contentHeight) {
+            // Prevent panning up beyond content
+            if (viewportWorldY < contentMinY) {
+                newOffsetY = contentMinY * this.scale;
+            }
+            // Prevent panning down beyond content
+            if (viewportWorldY + viewportWorldHeight > contentMaxY) {
+                newOffsetY = (contentMaxY - viewportWorldHeight) * this.scale;
+            }
+        } else {
+            // Content is smaller than viewport - center it
+            const contentCenterY = (contentMinY + contentMaxY) / 2;
+            newOffsetY = canvasHeight / 2 - contentCenterY * this.scale;
+        }
+
+        this.offsetX = newOffsetX;
+        this.offsetY = newOffsetY;
     }
 
     scheduleDraw() {

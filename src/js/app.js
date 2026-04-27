@@ -638,16 +638,30 @@ class App {
         const scaleY = availHeight / imgHeight;
         const fitScale = Math.min(scaleX, scaleY, 1); // Don't upscale
 
-        // Position at center
+        // Position near origin (not center of huge canvas)
+        // This prevents image from disappearing when zooming
         const scaledWidth = imgWidth * fitScale;
         const scaledHeight = imgHeight * fitScale;
-        imageObj.x = (canvasWidth - scaledWidth) / 2;
-        imageObj.y = (canvasHeight - scaledHeight) / 2;
+        imageObj.x = padding;
+        imageObj.y = padding;
         imageObj.width = scaledWidth;
         imageObj.height = scaledHeight;
 
-        // Reset zoom to fit the content
+        // Reset zoom and pan to origin
         this.canvasManager.resetZoom();
+        this.canvasManager.offsetX = 0;
+        this.canvasManager.offsetY = 0;
+
+        // Set world bounds to match content size
+        // This ensures zoom/pan calculations stay within reasonable bounds
+        if (this.canvasManager.setBounds) {
+            this.canvasManager.setBounds({
+                minX: 0,
+                minY: 0,
+                maxX: scaledWidth + padding * 2,
+                maxY: scaledHeight + padding * 2
+            });
+        }
 
         console.log(`[DEBUG] Auto-fitted image: ${imgWidth}x${imgHeight} → ${scaledWidth.toFixed(0)}x${scaledHeight.toFixed(0)} at (${imageObj.x.toFixed(0)}, ${imageObj.y.toFixed(0)})`);
         this.canvasManager.draw();
