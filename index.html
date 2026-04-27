@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doppleit Vector v1</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.2.0/svg.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 1.5rem 2rem; margin-bottom: 0; max-height: 45vh; overflow-y: auto; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 1.5rem 2rem; max-height: 45vh; overflow-y: auto; }
         .hero-main { text-align: center; margin-bottom: 0.8rem; }
         .hero h1 { font-size: 1.8rem; margin: 0 0 0.3rem 0; background: linear-gradient(135deg, #fff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .gsrf-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0, 102, 204, 0.15); padding: 0.25rem 0.75rem; border-radius: 20px; margin-bottom: 0.75rem; }
@@ -29,60 +29,32 @@
         .human-speak ul { margin: 0; padding-left: 1.5rem; }
         .human-speak li { margin: 0.5rem 0; line-height: 1.4; }
         .human-speak .ps { font-size: 0.8rem; color: #aaa; margin-bottom: 0; font-style: italic; }
+        
         main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
         .toolbar { background: #222; border-right: 1px solid #333; padding: 8px; display: flex; flex-direction: column; gap: 4px; width: 48px; }
-        .tool-btn { width: 32px; height: 32px; border: 1px solid #333; background: #2a2a2a; color: #999; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
+        .tool-btn { width: 32px; height: 32px; border: 1px solid #333; background: #2a2a2a; color: #999; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .tool-btn:hover { background: #333; border-color: #444; }
         .tool-btn.active { background: #0066cc; border-color: #0066cc; color: #fff; }
         .tool-btn.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-        .tool-btn.disabled:hover { background: #2a2a2a; border-color: #333; }
+        
         .canvas-container { flex: 1; display: flex; flex-direction: column; background: #1a1a1a; }
-        #canvas { flex: 1; background: white; cursor: crosshair; }
-        #canvas.select-mode { cursor: default; }
+        canvas#canvas { flex: 1; background: white; display: block; }
+        
         .sidebar { width: 280px; background: #222; border-left: 1px solid #333; display: flex; flex-direction: column; }
         .sidebar-section { border-bottom: 1px solid #333; }
         .sidebar-header { padding: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #999; background: #1a1a1a; }
         .sidebar-content { padding: 12px; }
-        .color-picker-group { display: flex; flex-direction: column; gap: 8px; }
-        .color-input-wrapper { display: flex; gap: 8px; }
-        .color-input { flex: 1; background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+        .color-input { width: 100%; background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-bottom: 8px; }
         .color-input:focus { outline: none; border-color: #0066cc; }
         .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
         .swatch { width: 100%; aspect-ratio: 1; border-radius: 4px; border: 1px solid #333; cursor: pointer; transition: all 0.2s; }
-        .swatch:hover { border-color: #666; transform: scale(1.05); }
-        .layers-panel { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-        .layer-item { background: #2a2a2a; border: 1px solid #333; margin-bottom: 4px; border-radius: 4px; display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; transition: all 0.2s; }
-        .layer-item:hover { background: #333; border-color: #444; }
-        .layer-item.selected { background: #0066cc; border-color: #0066cc; }
-        .layer-visibility { width: 20px; height: 20px; background: transparent; border: none; color: #999; cursor: pointer; font-size: 14px; padding: 0; display: flex; align-items: center; justify-content: center; }
-        .layer-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
-        .layer-delete { background: transparent; border: none; color: #999; cursor: pointer; font-size: 12px; padding: 0; width: 20px; height: 20px; }
-        .layer-delete:hover { color: #ff6b6b; }
+        .swatch:hover { border-color: #666; }
+        
         footer { background: #222; border-top: 1px solid #333; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; height: 48px; font-size: 12px; color: #999; }
         .export-buttons { display: flex; gap: 8px; }
         .btn { background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
         .btn:hover:not(:disabled) { background: #333; border-color: #444; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn.primary { background: #0066cc; border-color: #0066cc; color: #fff; }
-        .btn.primary:hover { background: #0052a3; border-color: #0052a3; }
-        .snap-toggle { display: flex; align-items: center; gap: 8px; }
-        .toggle-checkbox { width: 40px; height: 24px; background: #2a2a2a; border: 1px solid #333; border-radius: 12px; cursor: pointer; position: relative; transition: all 0.2s; }
-        .toggle-checkbox.active { background: #0066cc; border-color: #0066cc; }
-        .toggle-slider { width: 20px; height: 20px; background: #666; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: all 0.2s; }
-        .toggle-checkbox.active .toggle-slider { left: 18px; background: #fff; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background: #222; border: 1px solid #333; border-radius: 8px; padding: 24px; max-width: 400px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
-        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #fff; }
-        .modal-message { font-size: 14px; color: #ccc; margin-bottom: 20px; line-height: 1.5; }
-        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
-        .tooltip { position: absolute; background: #333; color: #e0e0e0; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; pointer-events: none; z-index: 100; border: 1px solid #444; opacity: 0; transition: opacity 0.2s; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 8px; }
-        .tool-btn:hover .tooltip { opacity: 1; }
-        .grid-background { background-image: linear-gradient(0deg, #f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px); background-size: 10px 10px; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1a1a1a; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #444; }
     </style>
 </head>
 <body>
@@ -103,76 +75,51 @@
             <div class="novelty-icon">🔬</div>
             <div class="novelty-content">
                 <h3>What makes this different? <span class="one-of-a-kind">1 of a kind</span></h3>
-                <p><strong>GSRF (Gradient-Stabilized Recursive Filter)</strong> — a deterministic safety filter originally developed for quantum error correction — now applied to vector graphics. While other tools <em>react</em> to jitter and drift, GSRF <em>prevents</em> them by bounding every recursive update before it happens.</p>
+                <p><strong>GSRF (Gradient-Stabilized Recursive Filter)</strong> — deterministic safety filter from quantum error correction now prevents snap jitter in vector editing.</p>
                 <div class="feature-highlights">
                     <span>✅ Snap without jitter</span>
-                    <span>⚡ Deterministic (same input → same output)</span>
-                    <span>🔮 Pro v2: Curve stabilization, drift protection</span>
+                    <span>⚡ Deterministic</span>
+                    <span>🔮 Pro v2: Curve stabilization</span>
                 </div>
             </div>
         </div>
 
         <div class="demo-hint">
             <span class="hint-icon">🎯</span>
-            Try it: Drag an object near a grid line. <strong>No jitter</strong> — that's GSRF working.
+            Try drawing on the canvas. Smooth snap to grid with GSRF filtering active.
         </div>
 
         <div class="human-speak">
-            <h3>What does this mean for you? (No tech speak, promise)</h3>
+            <h3>What does this mean for you?</h3>
             <ul>
-                <li>🎯 <strong>Snap without the seizure:</strong> Objects glide to the grid. No flicker. No fight.</li>
-                <li>✍️ <strong>Curves that listen:</strong> (Pro v2) Your shaky hand? Filtered. Smooth curves the first time.</li>
-                <li>🔄 <strong>Transforms that don't drift:</strong> (Pro v2) Scale and rotate all day. Your shape stays perfect.</li>
-                <li>🧠 <strong>No more "why did it do that?":</strong> The math just works. You focus on design, not debugging the tool.</li>
+                <li>🎯 <strong>Snap without the seizure:</strong> Objects glide to the grid. No flicker.</li>
+                <li>✍️ <strong>Curves that listen:</strong> (Pro v2) Smooth curves filtered in real-time.</li>
+                <li>🔄 <strong>Transforms that don't drift:</strong> (Pro v2) Perfect scaling and rotation.</li>
+                <li>🧠 <strong>Focus on design:</strong> The math just works. No debugging the tool.</li>
             </ul>
-            <p class="ps">GSRF originally came from quantum error correction. Now it's here to save your sanity.</p>
+            <p class="ps">GSRF originally came from quantum error correction. Now it saves your sanity.</p>
         </div>
     </header>
 
     <main>
         <div class="toolbar">
-            <button class="tool-btn active" data-tool="select" title="Select">🖱️<div class="tooltip">Select</div></button>
-            <button class="tool-btn" data-tool="rect" title="Rectangle">⬛<div class="tooltip">Rectangle</div></button>
-            <button class="tool-btn" data-tool="circle" title="Circle">●<div class="tooltip">Circle</div></button>
-            <button class="tool-btn" data-tool="line" title="Line">/<div class="tooltip">Line</div></button>
-            <button class="tool-btn" data-tool="text" title="Text">T<div class="tooltip">Text</div></button>
-            <button class="tool-btn disabled" data-tool="pen" title="Pen">✏️<div class="tooltip">Pro version</div></button>
-            <button class="tool-btn" data-tool="upload" title="Upload">🖼️<div class="tooltip">Upload</div></button>
+            <button class="tool-btn active" data-tool="draw" title="Draw">✏️</button>
+            <button class="tool-btn" data-tool="select" title="Select">🖱️</button>
+            <button class="tool-btn" data-tool="colors" title="Colors">🎨</button>
+            <button class="tool-btn" data-tool="export" title="Export">📥</button>
         </div>
 
         <div class="canvas-container">
-            <svg id="canvas" class="grid-background"></svg>
+            <canvas id="canvas"></canvas>
         </div>
 
         <div class="sidebar">
             <div class="sidebar-section">
                 <div class="sidebar-header">Colors</div>
                 <div class="sidebar-content">
-                    <div class="color-picker-group">
-                        <div class="color-input-wrapper">
-                            <input type="text" id="colorInput" class="color-input" value="#0066cc" maxlength="7">
-                        </div>
-                        <div class="color-swatches" id="colorSwatches"></div>
-                    </div>
+                    <input type="text" id="colorInput" class="color-input" value="#0066cc" maxlength="7">
+                    <div class="color-swatches" id="colorSwatches"></div>
                 </div>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-header">Snap Settings</div>
-                <div class="sidebar-content">
-                    <div class="snap-toggle">
-                        <label style="flex: 1;">Grid Snap</label>
-                        <div class="toggle-checkbox active" id="snapToggle">
-                            <div class="toggle-slider"></div>
-                        </div>
-                    </div>
-                    <p style="font-size: 11px; color: #666; margin-top: 8px;">Prevents snap jitter with GSRF</p>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-header">Layers</div>
-                <div class="layers-panel" id="layersPanel"></div>
             </div>
         </div>
     </main>
@@ -180,34 +127,21 @@
     <footer>
         <div style="font-size: 10px; color: #666;">v1.0 — GSRF Snap Stabilizer | Pro v2 coming 2026</div>
         <div class="export-buttons">
-            <button class="btn" id="exportSvg">📥 SVG</button>
-            <button class="btn disabled" id="exportPng" title="Pro">📥 PNG</button>
-            <button class="btn" id="uploadImage">📤 Upload</button>
+            <button class="btn" onclick="exportCanvas()">📥 Export PNG</button>
+            <button class="btn">📤 Upload</button>
         </div>
     </footer>
 
-    <div class="modal" id="featureModal">
-        <div class="modal-content">
-            <div class="modal-title">Coming Soon</div>
-            <div class="modal-message" id="modalMessage"></div>
-            <div class="modal-buttons">
-                <button class="btn primary" onclick="document.getElementById('featureModal').classList.remove('active')">Got it</button>
-            </div>
-        </div>
-    </div>
-
-    <input type="file" id="imageUploadInput" accept="image/*" style="display: none;">
-
     <script>
+        // GSRF Snap Filter
         class GSRFSnapFilter {
-            constructor(options = {}) {
-                this.beta = options.beta || 0.6;
-                this.mem = options.mem || 0.3;
-                this.k_return = options.k_return || 1.2;
-                this.gridSize = options.gridSize || 10;
+            constructor() {
+                this.beta = 0.6;
+                this.mem = 0.3;
+                this.k_return = 1.2;
+                this.gridSize = 10;
                 this.previous = null;
                 this.history = [];
-                this.maxHistory = 5;
             }
 
             filter(current, target) {
@@ -217,33 +151,22 @@
                 }
 
                 const gradient = -(current - target);
-                let memory = 0;
-                if (this.history.length > 0) {
-                    const delta = current - this.previous;
-                    memory = Math.tanh(delta);
-                }
-
+                let memory = this.history.length > 0 ? Math.tanh(current - this.previous) : 0;
                 const update = this.k_return * gradient + this.mem * memory;
                 const filtered = current + this.beta * update;
 
                 this.history.push(current);
-                if (this.history.length > this.maxHistory) {
-                    this.history.shift();
-                }
-
+                if (this.history.length > 5) this.history.shift();
                 this.previous = filtered;
                 return filtered;
             }
 
-            snapAndFilter(position, enabled = true) {
-                if (!enabled) return position;
-
-                const snappedX = Math.round(position.x / this.gridSize) * this.gridSize;
-                const snappedY = Math.round(position.y / this.gridSize) * this.gridSize;
-
+            snapAndFilter(x, y) {
+                const snappedX = Math.round(x / this.gridSize) * this.gridSize;
+                const snappedY = Math.round(y / this.gridSize) * this.gridSize;
                 return {
-                    x: this.filter(position.x, snappedX),
-                    y: this.filter(position.y, snappedY)
+                    x: this.filter(x, snappedX),
+                    y: this.filter(y, snappedY)
                 };
             }
 
@@ -253,286 +176,109 @@
             }
         }
 
-        const app = {
-            currentTool: 'select',
-            currentColor: '#0066cc',
-            snapEnabled: true,
-            selectedElement: null,
-            isDrawing: false,
-            startX: 0,
-            startY: 0,
-            layers: [],
-            history: [],
-            historyIndex: -1,
-            maxHistory: 50,
-            gsrf: new GSRFSnapFilter({ gridSize: 10 })
-        };
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const colorInput = document.getElementById('colorInput');
+        const gsrf = new GSRFSnapFilter();
 
-        const svg = SVG('#canvas');
-        svg.viewbox(0, 0, 800, 600);
-
-        const colorPresets = ['#0066cc', '#ff6b6b', '#4db84d', '#ffd700', '#ff8c00', '#9b59b6', '#1abc9c', '#34495e', '#e74c3c', '#16a085', '#2980b9', '#c0392b'];
-
-        function initializeUI() {
-            const swatchesContainer = document.getElementById('colorSwatches');
-            colorPresets.forEach(color => {
-                const swatch = document.createElement('div');
-                swatch.className = 'swatch';
-                swatch.style.backgroundColor = color;
-                swatch.onclick = () => {
-                    app.currentColor = color;
-                    document.getElementById('colorInput').value = color;
-                };
-                swatchesContainer.appendChild(swatch);
-            });
-
-            document.querySelectorAll('.tool-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    if (btn.classList.contains('disabled')) {
-                        showFeatureModal(btn.dataset.tool);
-                        return;
-                    }
-
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    app.currentTool = btn.dataset.tool;
-
-                    if (btn.dataset.tool === 'select') {
-                        document.getElementById('canvas').classList.add('select-mode');
-                    } else {
-                        document.getElementById('canvas').classList.remove('select-mode');
-                    }
-
-                    if (btn.dataset.tool === 'upload') {
-                        document.getElementById('imageUploadInput').click();
-                    }
-                });
-            });
-
-            document.getElementById('colorInput').addEventListener('change', (e) => {
-                const value = e.target.value;
-                if (/^#[0-9A-F]{6}$/i.test(value)) {
-                    app.currentColor = value;
-                }
-            });
-
-            document.getElementById('snapToggle').addEventListener('click', () => {
-                app.snapEnabled = !app.snapEnabled;
-                document.getElementById('snapToggle').classList.toggle('active');
-            });
-
-            document.getElementById('exportSvg').addEventListener('click', exportSVG);
-            document.getElementById('exportPng').addEventListener('click', () => showFeatureModal('exportPng'));
-            document.getElementById('uploadImage').addEventListener('click', () => document.getElementById('imageUploadInput').click());
-            document.getElementById('imageUploadInput').addEventListener('change', handleImageUpload);
-
-            const canvas = document.getElementById('canvas');
-            canvas.addEventListener('mousedown', onCanvasMouseDown);
-            canvas.addEventListener('mousemove', onCanvasMouseMove);
-            canvas.addEventListener('mouseup', onCanvasMouseUp);
-            canvas.addEventListener('click', onCanvasClick);
-
-            document.addEventListener('keydown', onKeyDown);
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            drawGrid();
         }
 
-        function onCanvasMouseDown(e) {
-            const rect = svg.node.getBoundingClientRect();
-            app.startX = e.clientX - rect.left;
-            app.startY = e.clientY - rect.top;
-            app.isDrawing = true;
+        function drawGrid() {
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < canvas.width; i += 10) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 10) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
         }
 
-        function onCanvasMouseMove(e) {
-            if (!app.isDrawing) return;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
 
-            const rect = svg.node.getBoundingClientRect();
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+            gsrf.reset();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
             let x = e.clientX - rect.left;
             let y = e.clientY - rect.top;
 
-            const snapped = app.gsrf.snapAndFilter({ x, y }, app.snapEnabled);
+            // Apply GSRF snap filtering
+            const snapped = gsrf.snapAndFilter(x, y);
             x = snapped.x;
             y = snapped.y;
 
-            if (app.currentTool === 'rect') {
-                const width = Math.abs(x - app.startX);
-                const height = Math.abs(y - app.startY);
-                const left = Math.min(x, app.startX);
-                const top = Math.min(y, app.startY);
+            ctx.strokeStyle = colorInput.value;
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
 
-                let rect = svg.find('rect').at(-1);
-                if (!rect || rect.attr('temp') !== 'true') {
-                    rect = svg.rect(width, height).attr('temp', 'true').fill(app.currentColor).stroke({ color: '#333', width: 1 });
-                }
-                rect.width(width).height(height).move(left, top);
-            } else if (app.currentTool === 'circle') {
-                const dx = x - app.startX;
-                const dy = y - app.startY;
-                const radius = Math.sqrt(dx * dx + dy * dy) / 2;
+            lastX = x;
+            lastY = y;
+        });
 
-                let circle = svg.find('circle').at(-1);
-                if (!circle || circle.attr('temp') !== 'true') {
-                    circle = svg.circle(radius * 2).attr('temp', 'true').fill(app.currentColor).stroke({ color: '#333', width: 1 });
-                }
-                circle.radius(radius).center((app.startX + x) / 2, (app.startY + y) / 2);
-            } else if (app.currentTool === 'line') {
-                let line = svg.find('line').at(-1);
-                if (!line || line.attr('temp') !== 'true') {
-                    line = svg.line(app.startX, app.startY, x, y).attr('temp', 'true').stroke({ color: app.currentColor, width: 2, linecap: 'round' });
-                }
-                line.plot(app.startX, app.startY, x, y);
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDrawing = false;
+        });
+
+        // Color swatches
+        const colors = ['#0066cc', '#ff6b6b', '#4db84d', '#ffd700', '#ff8c00', '#9b59b6'];
+        const swatchContainer = document.getElementById('colorSwatches');
+        colors.forEach(color => {
+            const swatch = document.createElement('div');
+            swatch.className = 'swatch';
+            swatch.style.backgroundColor = color;
+            swatch.onclick = () => {
+                colorInput.value = color;
+            };
+            swatchContainer.appendChild(swatch);
+        });
+
+        // Color input
+        colorInput.addEventListener('change', () => {
+            if (!/^#[0-9A-F]{6}$/i.test(colorInput.value)) {
+                colorInput.value = '#0066cc';
             }
-        }
+        });
 
-        function onCanvasMouseUp(e) {
-            app.isDrawing = false;
-            svg.find('[temp="true"]').forEach(el => {
-                el.attr('temp', null);
-                addLayer(el);
-                saveHistory();
-            });
-        }
-
-        function onCanvasClick(e) {
-            if (app.currentTool === 'text') {
-                const rect = svg.node.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const text = prompt('Enter text:', 'Text');
-                if (text) {
-                    const textEl = svg.text(text).font({ size: 16 }).fill(app.currentColor).move(x, y);
-                    addLayer(textEl);
-                    saveHistory();
-                }
-            }
-        }
-
-        function onKeyDown(e) {
-            if (e.ctrlKey || e.metaKey) {
-                if (e.key === 'z') { e.preventDefault(); undo(); }
-                else if (e.key === 'y') { e.preventDefault(); redo(); }
-            }
-        }
-
-        function addLayer(element) {
-            const layer = { id: `layer-${Date.now()}`, name: `Shape ${app.layers.length + 1}`, element, visible: true };
-            app.layers.push(layer);
-            updateLayersPanel();
-        }
-
-        function removeLayer(element) {
-            app.layers = app.layers.filter(l => l.element !== element);
-            updateLayersPanel();
-        }
-
-        function updateLayersPanel() {
-            const panel = document.getElementById('layersPanel');
-            panel.innerHTML = '';
-
-            [...app.layers].reverse().forEach(layer => {
-                const item = document.createElement('div');
-                item.className = 'layer-item';
-
-                const visBtn = document.createElement('button');
-                visBtn.className = 'layer-visibility';
-                visBtn.textContent = layer.visible ? '👁️' : '👁️‍🗨️';
-                visBtn.onclick = () => {
-                    layer.visible = !layer.visible;
-                    layer.element.style('opacity', layer.visible ? 1 : 0.3);
-                    updateLayersPanel();
-                };
-
-                const nameEl = document.createElement('div');
-                nameEl.className = 'layer-name';
-                nameEl.textContent = layer.name;
-
-                const delBtn = document.createElement('button');
-                delBtn.className = 'layer-delete';
-                delBtn.textContent = '✕';
-                delBtn.onclick = () => {
-                    layer.element.remove();
-                    removeLayer(layer.element);
-                    saveHistory();
-                };
-
-                item.appendChild(visBtn);
-                item.appendChild(nameEl);
-                item.appendChild(delBtn);
-                panel.appendChild(item);
-            });
-        }
-
-        function saveHistory() {
-            const state = svg.svg();
-            app.history = app.history.slice(0, app.historyIndex + 1);
-            app.history.push(state);
-            if (app.history.length > app.maxHistory) app.history.shift();
-            else app.historyIndex++;
-        }
-
-        function undo() {
-            if (app.historyIndex > 0) {
-                app.historyIndex--;
-                restoreState(app.history[app.historyIndex]);
-            }
-        }
-
-        function redo() {
-            if (app.historyIndex < app.history.length - 1) {
-                app.historyIndex++;
-                restoreState(app.history[app.historyIndex]);
-            }
-        }
-
-        function restoreState(svgString) {
-            svg.clear();
-            svg.html(svgString);
-            app.layers = [];
-            updateLayersPanel();
-        }
-
-        function exportSVG() {
-            const svgData = new XMLSerializer().serializeToString(svg.node);
-            const blob = new Blob([svgData], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
+        // Export
+        function exportCanvas() {
             const link = document.createElement('a');
-            link.href = url;
-            link.download = 'design.svg';
+            link.href = canvas.toDataURL('image/png');
+            link.download = 'doppleit-design.png';
             link.click();
-            URL.revokeObjectURL(url);
         }
 
-        function showFeatureModal(feature) {
-            const messages = {
-                pen: 'Pen tool with GSRF Curve Stabilizer coming in Pro',
-                exportPng: 'PNG export available in Pro version'
-            };
-            document.getElementById('modalMessage').textContent = messages[feature] || 'Coming soon';
-            document.getElementById('featureModal').classList.add('active');
-        }
-
-        function handleImageUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const image = svg.image(event.target.result, 400, 300).move(50, 50);
-                    image.opacity(0.3);
-                    const layer = { id: `ref-${Date.now()}`, name: 'Reference', element: image, visible: true };
-                    app.layers.unshift(layer);
-                    updateLayersPanel();
-                    saveHistory();
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        initializeUI();
-        saveHistory();
+        // Initialize
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
     </script>
 </body>
 </html>
