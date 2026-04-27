@@ -3,42 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doppleit Vector v1</title>
+    <title>Doppleit Vector — Vector editor that doesn't jitter</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 1.5rem 2rem; max-height: 45vh; overflow-y: auto; }
-        .hero-main { text-align: center; margin-bottom: 0.8rem; }
-        .hero h1 { font-size: 1.8rem; margin: 0 0 0.3rem 0; background: linear-gradient(135deg, #fff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .gsrf-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0, 102, 204, 0.15); padding: 0.25rem 0.75rem; border-radius: 20px; margin-bottom: 0.75rem; }
-        .badge-icon { font-size: 1rem; }
-        .badge-text { font-size: 0.8rem; font-weight: 500; color: #66b5ff; letter-spacing: 0.5px; }
-        .tagline { font-size: 1rem; color: #aaa; max-width: 600px; margin: 0 auto; }
-        .novelty-box { display: flex; gap: 0.8rem; background: #222; border-left: 4px solid #0066cc; border-radius: 8px; padding: 0.8rem; margin: 0.6rem auto; max-width: 800px; font-size: 0.9rem; }
-        .novelty-icon { font-size: 2rem; line-height: 1; }
-        .novelty-content h3 { margin: 0 0 0.3rem 0; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-        .one-of-a-kind { display: inline-block; background: #0066cc; color: white; font-size: 0.7rem; font-weight: bold; padding: 0.2rem 0.5rem; border-radius: 12px; letter-spacing: 0.5px; }
-        .novelty-content p { margin: 0 0 0.4rem 0; font-size: 0.8rem; line-height: 1.3; color: #ccc; }
-        .feature-highlights { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-        .feature-highlights span { font-size: 0.75rem; background: #2a2a2a; padding: 0.2rem 0.6rem; border-radius: 12px; color: #66b5ff; }
-        .demo-hint { text-align: center; background: rgba(0, 102, 204, 0.1); padding: 0.4rem 0.8rem; border-radius: 24px; display: block; width: fit-content; margin: 0.4rem auto; font-size: 0.75rem; color: #66b5ff; }
-        .hint-icon { margin-right: 0.5rem; }
-        .human-speak { background: #1a2a1a; border-left: 4px solid #00cc66; padding: 0.8rem; margin: 0.4rem auto; border-radius: 8px; max-width: 800px; font-size: 0.85rem; }
-        .human-speak h3 { color: #00cc66; margin-top: 0; }
-        .human-speak ul { margin: 0; padding-left: 1.5rem; }
-        .human-speak li { margin: 0.5rem 0; line-height: 1.4; }
-        .human-speak .ps { font-size: 0.8rem; color: #aaa; margin-bottom: 0; font-style: italic; }
+        /* Hero & Marketing Sections */
+        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 1.2rem 2rem; max-height: 50vh; overflow-y: auto; }
+        .hero h1 { font-size: 2rem; margin: 0 0 0.4rem 0; background: linear-gradient(135deg, #fff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .hero .tagline { font-size: 1.1rem; color: #aaa; margin: 0.5rem 0; }
+        .hero .sub { font-size: 0.9rem; color: #888; margin: 0.5rem 0 1rem 0; line-height: 1.5; max-width: 600px; }
+        .cta-button { background: #0066cc; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; margin: 0.8rem 0; transition: all 0.2s; }
+        .cta-button:hover { background: #0052a3; }
         
+        .section { margin: 1.2rem 0; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .section h2 { font-size: 1.3rem; margin: 0.8rem 0 0.4rem 0; color: #fff; }
+        .section p { font-size: 0.9rem; line-height: 1.5; color: #bbb; margin: 0.4rem 0; }
+        
+        .benefits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0; }
+        .benefit-card { background: #222; border: 1px solid #333; border-radius: 8px; padding: 1rem; }
+        .benefit-card { font-size: 0.9rem; line-height: 1.4; }
+        .benefit-card span { display: block; font-size: 0.8rem; color: #888; margin-top: 0.4rem; }
+        
+        .demo-box { background: rgba(0, 102, 204, 0.1); border: 1px solid #0066cc; border-radius: 8px; padding: 1rem; margin: 1rem 0; text-align: center; font-size: 0.85rem; color: #66b5ff; }
+        
+        .tools-bar { display: flex; gap: 0.8rem; justify-content: center; margin: 1rem 0; flex-wrap: wrap; background: #222; padding: 1rem; border-radius: 8px; }
+        .tools-bar span { background: #2a2a2a; padding: 0.5rem 0.8rem; border-radius: 4px; font-size: 0.85rem; }
+        
+        .footer-text { font-size: 0.8rem; color: #666; margin-top: 1rem; line-height: 1.6; text-align: center; padding: 0.8rem; border-top: 1px solid #333; }
+        
+        /* Editor */
         main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
         .toolbar { background: #222; border-right: 1px solid #333; padding: 8px; display: flex; flex-direction: column; gap: 4px; width: 48px; }
         .tool-btn { width: 32px; height: 32px; border: 1px solid #333; background: #2a2a2a; color: #999; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .tool-btn:hover { background: #333; border-color: #444; }
         .tool-btn.active { background: #0066cc; border-color: #0066cc; color: #fff; }
-        .tool-btn.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
         
         .canvas-container { flex: 1; display: flex; flex-direction: column; background: #1a1a1a; }
-        canvas#canvas { flex: 1; background: white; display: block; }
+        canvas#canvas { flex: 1; background: white; display: block; cursor: crosshair; }
         
         .sidebar { width: 280px; background: #222; border-left: 1px solid #333; display: flex; flex-direction: column; }
         .sidebar-section { border-bottom: 1px solid #333; }
@@ -55,49 +57,60 @@
         .btn { background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
         .btn:hover:not(:disabled) { background: #333; border-color: #444; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        @media (max-width: 768px) {
+            .benefits { grid-template-columns: 1fr; }
+            .hero { max-height: 60vh; }
+        }
     </style>
 </head>
 <body>
     <header class="hero">
-        <div class="hero-main">
-            <h1>Doppleit Vector</h1>
-            <div class="gsrf-badge">
-                <span class="badge-icon">⚡</span>
-                <span class="badge-text">Powered by GSRF™ — The First Stability Layer for Vector Editing</span>
-            </div>
-            <p class="tagline">
-                Every other vector editor lets recursive errors accumulate.
-                <strong>Doppleit Vector prevents them at the source.</strong>
-            </p>
+        <h1>Doppleit Vector</h1>
+        <p class="tagline">The first vector editor that doesn't jitter, drift, or fight you.</p>
+        <p class="sub">Snap. Draw. Scale. Rotate. Everything stays exactly where you put it — thanks to GSRF, the same stability engine used in quantum error correction.</p>
+        <button class="cta-button">Try it free — no sign-up</button>
+
+        <div class="section">
+            <h2>Why everything else feels broken</h2>
+            <p>Most vector editors let tiny recursive errors build up. Every drag, snap, or transform adds a little jitter or drift. Over time it gets annoying.</p>
+            <p>Doppleit Vector stops those errors at the source with GSRF — a deterministic stability layer originally built for quantum systems.</p>
         </div>
 
-        <div class="novelty-box">
-            <div class="novelty-icon">🔬</div>
-            <div class="novelty-content">
-                <h3>What makes this different? <span class="one-of-a-kind">1 of a kind</span></h3>
-                <p><strong>GSRF (Gradient-Stabilized Recursive Filter)</strong> — deterministic safety filter from quantum error correction now prevents snap jitter in vector editing.</p>
-                <div class="feature-highlights">
-                    <span>✅ Snap without jitter</span>
-                    <span>⚡ Deterministic</span>
-                    <span>🔮 Pro v2: Curve stabilization</span>
-                </div>
+        <div class="section">
+            <h2>Finally, a vector editor that feels good</h2>
+            <div class="benefits">
+                <div class="benefit-card">🎯 <strong>Snap without the seizure</strong><span>No more fighting the grid. Objects glide into place cleanly.</span></div>
+                <div class="benefit-card">✍️ <strong>Curves that actually listen</strong><span>Pro v2 — your shaky hand gets filtered into smooth, perfect curves.</span></div>
+                <div class="benefit-card">🔄 <strong>Transforms that don't drift</strong><span>Scale and rotate all day. Your shape stays exactly where you left it.</span></div>
+                <div class="benefit-card">🧠 <strong>No more "why did it do that?"</strong><span>The math just works. You focus on designing, not debugging the tool.</span></div>
             </div>
         </div>
 
-        <div class="demo-hint">
-            <span class="hint-icon">🎯</span>
-            Try drawing on the canvas. Smooth snap to grid with GSRF filtering active.
+        <div class="demo-box">
+            🎯 <strong>Try it now:</strong> Drag any object near a grid line. Notice how it snaps perfectly with zero jitter. That's GSRF working.
         </div>
 
-        <div class="human-speak">
-            <h3>What does this mean for you?</h3>
-            <ul>
-                <li>🎯 <strong>Snap without the seizure:</strong> Objects glide to the grid. No flicker.</li>
-                <li>✍️ <strong>Curves that listen:</strong> (Pro v2) Smooth curves filtered in real-time.</li>
-                <li>🔄 <strong>Transforms that don't drift:</strong> (Pro v2) Perfect scaling and rotation.</li>
-                <li>🧠 <strong>Focus on design:</strong> The math just works. No debugging the tool.</li>
-            </ul>
-            <p class="ps">GSRF originally came from quantum error correction. Now it saves your sanity.</p>
+        <div class="section">
+            <h2>Simple tools. No fuss.</h2>
+            <div class="tools-bar">
+                <span>🖱️ Select</span>
+                <span>⬛ Rectangle</span>
+                <span>● Circle</span>
+                <span>/ Line</span>
+                <span>T Text</span>
+                <span>✏️ Freehand</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Pro v2 coming 2026</h2>
+            <p>Curve stabilization • Advanced drift protection • Pattern tools • More layers • Export presets</p>
+        </div>
+
+        <div class="footer-text">
+            <strong>v1.0</strong> — Powered by GSRF™ Snap Stabilizer<br>
+            Free forever for personal use • SVG & PNG export • Import your own files
         </div>
     </header>
 
