@@ -8,28 +8,28 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
-        .hero-main { text-align: center; margin-bottom: 1.5rem; }
-        .hero h1 { font-size: 2.5rem; margin: 0 0 0.5rem 0; background: linear-gradient(135deg, #fff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 1.5rem 2rem; margin-bottom: 0; max-height: 45vh; overflow-y: auto; }
+        .hero-main { text-align: center; margin-bottom: 0.8rem; }
+        .hero h1 { font-size: 1.8rem; margin: 0 0 0.3rem 0; background: linear-gradient(135deg, #fff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .gsrf-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0, 102, 204, 0.15); padding: 0.25rem 0.75rem; border-radius: 20px; margin-bottom: 0.75rem; }
         .badge-icon { font-size: 1rem; }
         .badge-text { font-size: 0.8rem; font-weight: 500; color: #66b5ff; letter-spacing: 0.5px; }
         .tagline { font-size: 1rem; color: #aaa; max-width: 600px; margin: 0 auto; }
-        .novelty-box { display: flex; gap: 1rem; background: #222; border-left: 4px solid #0066cc; border-radius: 8px; padding: 1rem; margin: 1.5rem 0; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .novelty-box { display: flex; gap: 0.8rem; background: #222; border-left: 4px solid #0066cc; border-radius: 8px; padding: 0.8rem; margin: 0.6rem auto; max-width: 800px; font-size: 0.9rem; }
         .novelty-icon { font-size: 2rem; line-height: 1; }
-        .novelty-content h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .novelty-content h3 { margin: 0 0 0.3rem 0; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
         .one-of-a-kind { display: inline-block; background: #0066cc; color: white; font-size: 0.7rem; font-weight: bold; padding: 0.2rem 0.5rem; border-radius: 12px; letter-spacing: 0.5px; }
-        .novelty-content p { margin: 0 0 0.75rem 0; font-size: 0.9rem; line-height: 1.4; color: #ccc; }
+        .novelty-content p { margin: 0 0 0.4rem 0; font-size: 0.8rem; line-height: 1.3; color: #ccc; }
         .feature-highlights { display: flex; flex-wrap: wrap; gap: 0.75rem; }
         .feature-highlights span { font-size: 0.75rem; background: #2a2a2a; padding: 0.2rem 0.6rem; border-radius: 12px; color: #66b5ff; }
-        .demo-hint { text-align: center; background: rgba(0, 102, 204, 0.1); padding: 0.5rem 1rem; border-radius: 24px; display: inline-block; width: auto; margin: 0 auto; font-size: 0.8rem; color: #66b5ff; }
+        .demo-hint { text-align: center; background: rgba(0, 102, 204, 0.1); padding: 0.4rem 0.8rem; border-radius: 24px; display: block; width: fit-content; margin: 0.4rem auto; font-size: 0.75rem; color: #66b5ff; }
         .hint-icon { margin-right: 0.5rem; }
-        .human-speak { background: #1a2a1a; border-left: 4px solid #00cc66; padding: 1rem; margin: 1rem 0; border-radius: 8px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .human-speak { background: #1a2a1a; border-left: 4px solid #00cc66; padding: 0.8rem; margin: 0.4rem auto; border-radius: 8px; max-width: 800px; font-size: 0.85rem; }
         .human-speak h3 { color: #00cc66; margin-top: 0; }
         .human-speak ul { margin: 0; padding-left: 1.5rem; }
         .human-speak li { margin: 0.5rem 0; line-height: 1.4; }
         .human-speak .ps { font-size: 0.8rem; color: #aaa; margin-bottom: 0; font-style: italic; }
-        main { display: flex; flex: 1; overflow: hidden; }
+        main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
         .toolbar { background: #222; border-right: 1px solid #333; padding: 8px; display: flex; flex-direction: column; gap: 4px; width: 48px; }
         .tool-btn { width: 32px; height: 32px; border: 1px solid #333; background: #2a2a2a; color: #999; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
         .tool-btn:hover { background: #333; border-color: #444; }
