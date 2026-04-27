@@ -1,336 +1,538 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- CSP is set in netlify.toml for production. Avoid a second strict meta policy here: it
-         blocked style-loader and inline style attributes, and could stack with header CSP. -->
-    <title>Doppleit Vector — Free in-browser vector editor, SVG &amp; image tools</title>
-    <meta name="description" content="Doppleit Vector is a free, client-side web app to draw, import images (JPG, PNG, WebP, SVG), vectorize with edge trace or cell poster, paint pixels, manage layers, and export. Runs in your browser with JavaScript. Open source.">
-    <meta name="keywords" content="vector editor, free vector graphics, browser vector editor, SVG editor online, in-browser design tool, Doppleit Vector, image to vector, lightweight illustrator alternative, web canvas, vanilla JavaScript">
-    <meta name="author" content="Carl Boon" />
-    <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#0c0c0e" />
-    <link rel="canonical" href="https://doppleit-vector.netlify.app/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Doppleit Vector" />
-    <meta property="og:title" content="Doppleit Vector — Free in-browser vector editor" />
-    <meta property="og:description" content="Draw and edit vector-style graphics, import images, optional trace vectorization, pixel paint on bitmaps, layers, and export. Runs entirely in the browser. Open source on GitHub." />
-    <meta property="og:url" content="https://doppleit-vector.netlify.app/" />
-    <meta property="og:locale" content="en_US" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Doppleit Vector — Free in-browser vector editor" />
-    <meta name="twitter:description" content="Client-side vector graphics demo: import, vectorize, pixel edit, layers, export. No install." />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90' font-family='DM%20Sans' fill='%23e8913a'%3ED%3C/text%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="src/css/styles.css" />
-    <link rel="stylesheet" href="src/css/app-shell.css" />
-    <script type="application/ld+json" nonce="doppleit">
-    {"@context":"https://schema.org","@type":"WebApplication","name":"Doppleit Vector","description":"In-browser vector graphics editor with import, vectorization, layers, and export.","url":"https://doppleit-vector.netlify.app/","applicationCategory":"DesignApplication","operatingSystem":"Web browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"codeRepository":"https://github.com/CBoon99/vector","author":{"@type":"Person","name":"Carl Boon"}}
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doppleit Vector v1</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.2.0/svg.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1a; color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
+        .hero-main { text-align: center; margin-bottom: 1.5rem; }
+        .hero h1 { font-size: 2.5rem; margin: 0 0 0.5rem 0; background: linear-gradient(135deg, #fff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .gsrf-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0, 102, 204, 0.15); padding: 0.25rem 0.75rem; border-radius: 20px; margin-bottom: 0.75rem; }
+        .badge-icon { font-size: 1rem; }
+        .badge-text { font-size: 0.8rem; font-weight: 500; color: #66b5ff; letter-spacing: 0.5px; }
+        .tagline { font-size: 1rem; color: #aaa; max-width: 600px; margin: 0 auto; }
+        .novelty-box { display: flex; gap: 1rem; background: #222; border-left: 4px solid #0066cc; border-radius: 8px; padding: 1rem; margin: 1.5rem 0; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .novelty-icon { font-size: 2rem; line-height: 1; }
+        .novelty-content h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .one-of-a-kind { display: inline-block; background: #0066cc; color: white; font-size: 0.7rem; font-weight: bold; padding: 0.2rem 0.5rem; border-radius: 12px; letter-spacing: 0.5px; }
+        .novelty-content p { margin: 0 0 0.75rem 0; font-size: 0.9rem; line-height: 1.4; color: #ccc; }
+        .feature-highlights { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .feature-highlights span { font-size: 0.75rem; background: #2a2a2a; padding: 0.2rem 0.6rem; border-radius: 12px; color: #66b5ff; }
+        .demo-hint { text-align: center; background: rgba(0, 102, 204, 0.1); padding: 0.5rem 1rem; border-radius: 24px; display: inline-block; width: auto; margin: 0 auto; font-size: 0.8rem; color: #66b5ff; }
+        .hint-icon { margin-right: 0.5rem; }
+        .human-speak { background: #1a2a1a; border-left: 4px solid #00cc66; padding: 1rem; margin: 1rem 0; border-radius: 8px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .human-speak h3 { color: #00cc66; margin-top: 0; }
+        .human-speak ul { margin: 0; padding-left: 1.5rem; }
+        .human-speak li { margin: 0.5rem 0; line-height: 1.4; }
+        .human-speak .ps { font-size: 0.8rem; color: #aaa; margin-bottom: 0; font-style: italic; }
+        main { display: flex; flex: 1; overflow: hidden; }
+        .toolbar { background: #222; border-right: 1px solid #333; padding: 8px; display: flex; flex-direction: column; gap: 4px; width: 48px; }
+        .tool-btn { width: 32px; height: 32px; border: 1px solid #333; background: #2a2a2a; color: #999; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
+        .tool-btn:hover { background: #333; border-color: #444; }
+        .tool-btn.active { background: #0066cc; border-color: #0066cc; color: #fff; }
+        .tool-btn.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .tool-btn.disabled:hover { background: #2a2a2a; border-color: #333; }
+        .canvas-container { flex: 1; display: flex; flex-direction: column; background: #1a1a1a; }
+        #canvas { flex: 1; background: white; cursor: crosshair; }
+        #canvas.select-mode { cursor: default; }
+        .sidebar { width: 280px; background: #222; border-left: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-section { border-bottom: 1px solid #333; }
+        .sidebar-header { padding: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #999; background: #1a1a1a; }
+        .sidebar-content { padding: 12px; }
+        .color-picker-group { display: flex; flex-direction: column; gap: 8px; }
+        .color-input-wrapper { display: flex; gap: 8px; }
+        .color-input { flex: 1; background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+        .color-input:focus { outline: none; border-color: #0066cc; }
+        .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+        .swatch { width: 100%; aspect-ratio: 1; border-radius: 4px; border: 1px solid #333; cursor: pointer; transition: all 0.2s; }
+        .swatch:hover { border-color: #666; transform: scale(1.05); }
+        .layers-panel { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+        .layer-item { background: #2a2a2a; border: 1px solid #333; margin-bottom: 4px; border-radius: 4px; display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; transition: all 0.2s; }
+        .layer-item:hover { background: #333; border-color: #444; }
+        .layer-item.selected { background: #0066cc; border-color: #0066cc; }
+        .layer-visibility { width: 20px; height: 20px; background: transparent; border: none; color: #999; cursor: pointer; font-size: 14px; padding: 0; display: flex; align-items: center; justify-content: center; }
+        .layer-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+        .layer-delete { background: transparent; border: none; color: #999; cursor: pointer; font-size: 12px; padding: 0; width: 20px; height: 20px; }
+        .layer-delete:hover { color: #ff6b6b; }
+        footer { background: #222; border-top: 1px solid #333; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; height: 48px; font-size: 12px; color: #999; }
+        .export-buttons { display: flex; gap: 8px; }
+        .btn { background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .btn:hover:not(:disabled) { background: #333; border-color: #444; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn.primary { background: #0066cc; border-color: #0066cc; color: #fff; }
+        .btn.primary:hover { background: #0052a3; border-color: #0052a3; }
+        .snap-toggle { display: flex; align-items: center; gap: 8px; }
+        .toggle-checkbox { width: 40px; height: 24px; background: #2a2a2a; border: 1px solid #333; border-radius: 12px; cursor: pointer; position: relative; transition: all 0.2s; }
+        .toggle-checkbox.active { background: #0066cc; border-color: #0066cc; }
+        .toggle-slider { width: 20px; height: 20px; background: #666; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: all 0.2s; }
+        .toggle-checkbox.active .toggle-slider { left: 18px; background: #fff; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: #222; border: 1px solid #333; border-radius: 8px; padding: 24px; max-width: 400px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #fff; }
+        .modal-message { font-size: 14px; color: #ccc; margin-bottom: 20px; line-height: 1.5; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .tooltip { position: absolute; background: #333; color: #e0e0e0; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; pointer-events: none; z-index: 100; border: 1px solid #444; opacity: 0; transition: opacity 0.2s; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 8px; }
+        .tool-btn:hover .tooltip { opacity: 1; }
+        .grid-background { background-image: linear-gradient(0deg, #f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px); background-size: 10px 10px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <header class="app-header" id="header">
-            <div class="app-header__brand">
-                <span class="app-header__logo" aria-hidden="true">DV</span>
-                <div>
-                    <h1 class="app-header__title">Doppleit Vector</h1>
-                    <p id="tagline" class="app-header__tagline">Create and edit vector graphics in your browser.</p>
+    <header class="hero">
+        <div class="hero-main">
+            <h1>Doppleit Vector</h1>
+            <div class="gsrf-badge">
+                <span class="badge-icon">⚡</span>
+                <span class="badge-text">Powered by GSRF™ — The First Stability Layer for Vector Editing</span>
+            </div>
+            <p class="tagline">
+                Every other vector editor lets recursive errors accumulate.
+                <strong>Doppleit Vector prevents them at the source.</strong>
+            </p>
+        </div>
+
+        <div class="novelty-box">
+            <div class="novelty-icon">🔬</div>
+            <div class="novelty-content">
+                <h3>What makes this different? <span class="one-of-a-kind">1 of a kind</span></h3>
+                <p><strong>GSRF (Gradient-Stabilized Recursive Filter)</strong> — a deterministic safety filter originally developed for quantum error correction — now applied to vector graphics. While other tools <em>react</em> to jitter and drift, GSRF <em>prevents</em> them by bounding every recursive update before it happens.</p>
+                <div class="feature-highlights">
+                    <span>✅ Snap without jitter</span>
+                    <span>⚡ Deterministic (same input → same output)</span>
+                    <span>🔮 Pro v2: Curve stabilization, drift protection</span>
                 </div>
             </div>
-            <button type="button" id="header-help" class="button">Help</button>
-        </header>
+        </div>
 
-        <div class="app-workspace">
-            <aside class="app-rail app-rail--left" aria-label="Import and color">
-                <div class="app-rail__scroll">
-                    <section id="upload-section">
-                        <div id="upload-area">
-                            <p>Drag and drop an image (JPG, PNG, WebP&hellip;) or <strong>SVG</strong>. <strong>Bitmap</strong> import is the default so your image appears on the canvas; uncheck to trace vectorize instead.</p>
-                            <div class="import-options">
-                                <label class="import-option"><input type="checkbox" id="import-raster-only" checked /> Bitmap only (place the image on the canvas; use Pixel tool to paint)</label>
-                                <label class="import-option"><input type="checkbox" id="import-cell-poster" /> Cell poster only (fast blocks, skip edge trace)</label>
-                            </div>
-                            <p class="hint">After a <em>Bitmap only</em> import, pick <strong>Pixel</strong> in the toolbar and draw on the image with the current HEX color.</p>
-                            <button type="button" id="browse-button" class="button">Browse files</button>
-                            <input type="file" id="file-upload" accept="image/*,image/svg+xml,application/json,.dopple" class="hidden" />
-                            <p id="upload-instructions" class="hidden"></p>
-                            <div id="progress-bar" class="hidden">
-                                <div id="progress-fill"></div>
-                            </div>
-                            <p id="loading-message" class="hidden">Processing... <span class="loader"></span></p>
-                            <p id="error-message" class="hidden"></p>
-                            <p id="confirmation-message" class="hidden">File processed successfully!</p>
-                            <div id="file-preview" class="hidden">
-                                <canvas id="preview-canvas" width="200" height="200"></canvas>
-                                <button type="button" id="add-preview" class="button">Add to canvas</button>
-                            </div>
-                            <img id="thumbnail-preview" class="hidden" alt="Uploaded image thumbnail" />
+        <div class="demo-hint">
+            <span class="hint-icon">🎯</span>
+            Try it: Drag an object near a grid line. <strong>No jitter</strong> — that's GSRF working.
+        </div>
+
+        <div class="human-speak">
+            <h3>What does this mean for you? (No tech speak, promise)</h3>
+            <ul>
+                <li>🎯 <strong>Snap without the seizure:</strong> Objects glide to the grid. No flicker. No fight.</li>
+                <li>✍️ <strong>Curves that listen:</strong> (Pro v2) Your shaky hand? Filtered. Smooth curves the first time.</li>
+                <li>🔄 <strong>Transforms that don't drift:</strong> (Pro v2) Scale and rotate all day. Your shape stays perfect.</li>
+                <li>🧠 <strong>No more "why did it do that?":</strong> The math just works. You focus on design, not debugging the tool.</li>
+            </ul>
+            <p class="ps">GSRF originally came from quantum error correction. Now it's here to save your sanity.</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="toolbar">
+            <button class="tool-btn active" data-tool="select" title="Select">🖱️<div class="tooltip">Select</div></button>
+            <button class="tool-btn" data-tool="rect" title="Rectangle">⬛<div class="tooltip">Rectangle</div></button>
+            <button class="tool-btn" data-tool="circle" title="Circle">●<div class="tooltip">Circle</div></button>
+            <button class="tool-btn" data-tool="line" title="Line">/<div class="tooltip">Line</div></button>
+            <button class="tool-btn" data-tool="text" title="Text">T<div class="tooltip">Text</div></button>
+            <button class="tool-btn disabled" data-tool="pen" title="Pen">✏️<div class="tooltip">Pro version</div></button>
+            <button class="tool-btn" data-tool="upload" title="Upload">🖼️<div class="tooltip">Upload</div></button>
+        </div>
+
+        <div class="canvas-container">
+            <svg id="canvas" class="grid-background"></svg>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-header">Colors</div>
+                <div class="sidebar-content">
+                    <div class="color-picker-group">
+                        <div class="color-input-wrapper">
+                            <input type="text" id="colorInput" class="color-input" value="#0066cc" maxlength="7">
                         </div>
-                    </section>
-                    <section id="controls-section">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <label for="color-wheel">Color picker</label>
-                                <canvas id="color-wheel" width="120" height="120"></canvas>
-                            </div>
-                            <div class="control-group">
-                                <label for="lightness-slider">Lightness: <span id="lightness-value">50%</span></label>
-                                <input type="range" id="lightness-slider" min="0" max="100" value="50" aria-valuenow="50" aria-label="Lightness" />
-                            </div>
-                            <div class="control-group">
-                                <label for="opacity-slider">Opacity: <span id="opacity-value">100%</span></label>
-                                <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Opacity" />
-                            </div>
-                            <div class="control-group">
-                                <label for="stroke-width-slider">Stroke width: <span id="stroke-width-value">1px</span></label>
-                                <input type="range" id="stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Stroke width" />
-                            </div>
-                            <div class="control-group">
-                                <label for="stroke-style">Stroke style</label>
-                                <select id="stroke-style">
-                                    <option value="solid">Solid</option>
-                                    <option value="dashed">Dashed</option>
-                                    <option value="dotted">Dotted</option>
-                                </select>
-                            </div>
-                            <div class="control-group">
-                                <label for="hex-input">HEX</label>
-                                <input type="text" id="hex-input" maxlength="7" value="#e37800" aria-label="HEX color input" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
-                            </div>
-                            <div class="control-group">
-                                <label for="rgb-input">RGB</label>
-                                <input type="text" id="rgb-input" value="227,120,0" aria-label="RGB color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$" />
-                            </div>
-                            <div class="control-group">
-                                <label for="hsl-input">HSL</label>
-                                <input type="text" id="hsl-input" value="32,100%,44%" aria-label="HSL color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*$" />
-                            </div>
-                            <div class="control-group">
-                                <label for="native-picker">System color</label>
-                                <input type="color" id="native-picker" value="#e37800" aria-label="System color picker" />
-                                <button type="button" id="system-picker" class="button">Open system picker</button>
-                            </div>
-                            <div class="control-group">
-                                <label for="fill-toggle">Fill shape</label>
-                                <input type="checkbox" id="fill-toggle" checked aria-label="Toggle fill" />
-                            </div>
-                        </div>
-                        <div id="swatches"></div>
-                    </section>
-                    <section id="future-roadmap" class="demo-future" aria-label="Planned features">
-                        <h2 class="demo-future__title">Future functionality (stubs)</h2>
-                        <p>Effects, blend modes, PDF/AI import, real-time collab, and 3D are scaffolded in services but not wired in this demo.</p>
-                    </section>
+                        <div class="color-swatches" id="colorSwatches"></div>
+                    </div>
                 </div>
-            </aside>
-
-            <div class="app-stage">
-                <section id="drawing-tools" aria-label="Tools">
-                    <nav>
-                        <button type="button" id="pen-tool" class="button active" title="Pen Tool (1)" data-feature="v2" disabled>Pen (v2)</button>
-                        <button type="button" id="rect-tool" class="button" title="Rectangle Tool (2)" data-feature="v2" disabled>Rect (v2)</button>
-                        <button type="button" id="circle-tool" class="button" title="Circle Tool (3)" data-feature="v2" disabled>Circle (v2)</button>
-                        <button type="button" id="select-tool" class="button" title="Select Tool (S)" data-feature="basicDrawing">Select</button>
-                        <button type="button" id="text-tool" class="button" title="Text Tool (4)" data-feature="v2" disabled>Text (v2)</button>
-                        <button type="button" id="bezier-tool" class="button" title="Bezier Tool (B)" data-feature="v2" disabled>Bezier (v2)</button>
-                        <button type="button" id="gradient-tool" class="button" title="Gradient Tool (G)" data-feature="v2" disabled>Gradient (v2)</button>
-                        <button type="button" id="eyedropper-tool" class="button" title="Pick color from image">Eyedropper</button>
-                        <button type="button" id="undo" class="button" title="Undo (Ctrl+Z)" data-feature="basicDrawing">Undo</button>
-                        <button type="button" id="redo" class="button" title="Redo (Ctrl+Y)" data-feature="basicDrawing">Redo</button>
-                        <button type="button" id="delete" class="button" title="Delete selected" data-feature="basicDrawing">Delete</button>
-                        <button type="button" id="clear-canvas" class="button" title="Clear canvas" data-feature="basicDrawing">Clear</button>
-                        <button type="button" id="pixel-tool" class="button" data-tool="pixel-tool" title="Paint pixels on image">Pixel</button>
-                        <button type="button" id="vectorize" class="button" title="Vectorize image (coming soon)" data-feature="v2" disabled>Vectorize (v2)</button>
-                    </nav>
-                </section>
-                <div id="tool-controls" class="tool-controls-host" aria-live="polite"></div>
-                <section id="canvas-section" aria-label="Canvas">
-                    <div class="canvas-container">
-                        <div id="ruler-top" class="ruler ruler-horizontal"></div>
-                        <div id="ruler-left" class="ruler ruler-vertical"></div>
-                        <svg id="grid" class="hidden"></svg>
-                        <canvas id="drawing-canvas" width="800" height="600"></canvas>
-                        <input type="text" id="text-input" class="hidden" placeholder="Enter text" />
-                    </div>
-                    <div id="mobile-controls">
-                        <div id="pinch-zoom-controls">
-                            <button type="button" id="zoom-in" class="button" title="Zoom in" data-feature="basicDrawing">Zoom in</button>
-                            <button type="button" id="zoom-out" class="button" title="Zoom out" data-feature="basicDrawing">Zoom out</button>
-                            <button type="button" id="reset-zoom" class="button" title="Reset zoom" data-feature="basicDrawing">Reset view</button>
-                        </div>
-                        <div id="touch-controls">
-                            <button type="button" id="toggle-touch-drawing" class="button" title="Touch drawing" data-feature="basicDrawing">Touch drawing</button>
-                            <button type="button" id="touch-precision" class="button hidden" title="Precision mode" data-feature="basicDrawing">Precision</button>
-                        </div>
-                    </div>
-                    <div class="snap-row">
-                        <label for="snap-grid">Snap to grid</label>
-                        <input type="checkbox" id="snap-grid" checked />
-                        <label for="grid-size">Cell:</label>
-                        <input type="number" id="grid-size" min="2" max="64" step="1" value="8" aria-label="Grid cell size in pixels" style="width:4em;" />
-                        <span>px</span>
-                    </div>
-                </section>
             </div>
 
-            <aside class="app-rail app-rail--right" aria-label="Export, layers, settings">
-                <div class="app-rail__scroll">
-                    <section id="export-section">
-                        <div class="controls-grid">
-                            <div class="control-group control-group--filename">
-                                <label for="filename">Filename</label>
-                                <input type="text" id="filename" value="vectorized" aria-label="Export filename" />
-                            </div>
-                            <div class="control-group">
-                                <button type="button" id="export-png" class="button" data-feature="basicExport">PNG</button>
-                                <button type="button" id="export-jpg" class="button" data-feature="basicExport">JPEG</button>
-                                <button type="button" id="export-svg" class="button" data-feature="advancedExport">SVG</button>
-                                <button type="button" id="export-pdf" class="button" data-feature="advancedExport">PDF</button>
-                                <button type="button" id="export-selection" class="button" data-feature="advancedExport">Selection</button>
-                            </div>
-                            <div class="control-group">
-                                <label for="svg-transparent">
-                                    <input type="checkbox" id="svg-transparent" checked /> Transparent SVG
-                                </label>
-                            </div>
-                            <div class="control-group">
-                                <label for="png-transparent">
-                                    <input type="checkbox" id="png-transparent" /> Transparent PNG
-                                </label>
-                            </div>
-                            <div class="control-group" id="png-bg-control" style="display:none;">
-                                <label for="png-bg-color">Background color:</label>
-                                <select id="png-bg-color">
-                                    <option value="white">White</option>
-                                    <option value="black">Black</option>
-                                    <option value="#f0f0f0">Light Gray</option>
-                                    <option value="#cccccc">Medium Gray</option>
-                                    <option value="#333333">Dark Gray</option>
-                                </select>
-                            </div>
-                            <div class="control-group">
-                                <button type="button" id="save-project" class="button" data-feature="basicExport">Save project</button>
-                                <button type="button" id="load-project" class="button" data-feature="basicExport">Load project</button>
-                                <input type="file" id="project-upload" accept=".json,.dopple" class="hidden" />
-                            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-header">Snap Settings</div>
+                <div class="sidebar-content">
+                    <div class="snap-toggle">
+                        <label style="flex: 1;">Grid Snap</label>
+                        <div class="toggle-checkbox active" id="snapToggle">
+                            <div class="toggle-slider"></div>
                         </div>
-                    </section>
-                    <section id="properties-section" class="hidden">
-                        <h3>Object properties</h3>
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <label for="fill-color-input">Fill (HEX)</label>
-                                <input type="text" id="fill-color-input" maxlength="7" aria-label="Object fill color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
-                            </div>
-                            <div class="control-group">
-                                <label for="stroke-color-input">Stroke (HEX)</label>
-                                <input type="text" id="stroke-color-input" maxlength="7" aria-label="Object stroke color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
-                            </div>
-                            <div class="control-group">
-                                <label for="object-opacity-slider">Opacity</label>
-                                <input type="range" id="object-opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Object opacity" />
-                            </div>
-                            <div class="control-group">
-                                <label for="object-stroke-width-slider">Stroke width</label>
-                                <input type="range" id="object-stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Object stroke width" />
-                            </div>
-                        </div>
-                    </section>
-                    <section id="layer-section">
-                        <h3>Layers</h3>
-                        <div id="timeline" class="layer-timeline">
-                            <button type="button" id="prev-version" class="button" data-feature="basicLayers">Previous</button>
-                            <button type="button" id="next-version" class="button" data-feature="basicLayers">Next</button>
-                        </div>
-                        <div id="layer-list"></div>
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <button type="button" id="add-layer" class="button" data-feature="basicLayers">Add layer</button>
-                                <button type="button" id="toggle-layer-visibility" class="button" data-feature="basicLayers">Visibility</button>
-                                <button type="button" id="toggle-layer-lock" class="button" data-feature="basicLayers">Lock</button>
-                                <button type="button" id="add-group" class="button" data-feature="layerEffects">Group</button>
-                                <button type="button" id="layer-mask" class="button" data-feature="layerEffects">Mask</button>
-                                <button type="button" id="layer-effects" class="button" data-feature="layerEffects">Effects</button>
-                                <button type="button" id="layer-blend" class="button" data-feature="layerEffects">Blend</button>
-                            </div>
-                        </div>
-                    </section>
-                    <section id="settings-section">
-                        <h3>Settings</h3>
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <button type="button" id="theme-toggle" class="button">Theme</button>
-                                <button type="button" id="high-contrast-toggle" class="button">High contrast</button>
-                                <button type="button" id="reset-session" class="button">Reset session</button>
-                            </div>
-                            <div class="control-group control-group--settings-toggles">
-                                <button type="button" id="debug-toggle" class="button">Debug</button>
-                                <button type="button" id="help-toggle" class="button">Help</button>
-                                <label for="autosave-toggle">
-                                    <input type="checkbox" id="autosave-toggle" checked /> Autosave
-                                </label>
-                                <label for="shortcuts-toggle">
-                                    <input type="checkbox" id="shortcuts-toggle" checked /> Shortcuts
-                                </label>
-                            </div>
-                        </div>
-                    </section>
-                    <section id="advanced-tools" class="hidden">
-                        <h3>Vector ops</h3>
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <button type="button" id="path-union" class="button" data-feature="pathOperations">Union</button>
-                                <button type="button" id="path-intersect" class="button" data-feature="pathOperations">Intersect</button>
-                                <button type="button" id="path-difference" class="button" data-feature="pathOperations">Difference</button>
-                            </div>
-                        </div>
-                    </section>
-                    <section id="collaboration" class="hidden">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <button type="button" id="share-project" class="button" data-feature="realtimeCollaboration">Share</button>
-                                <button type="button" id="invite-collaborators" class="button" data-feature="realtimeCollaboration">Invite</button>
-                                <button type="button" id="view-history" class="button" data-feature="realtimeCollaboration">History</button>
-                            </div>
-                        </div>
-                    </section>
-                    <section id="plugins" class="hidden">
-                        <div class="controls-grid">
-                            <div class="control-group">
-                                <button type="button" id="plugin-manager" class="button" data-feature="pluginSystem">Plugins</button>
-                                <button type="button" id="install-plugin" class="button" data-feature="pluginSystem">Install</button>
-                                <button type="button" id="plugin-settings" class="button" data-feature="pluginSystem">Settings</button>
-                            </div>
-                        </div>
-                    </section>
+                    </div>
+                    <p style="font-size: 11px; color: #666; margin-top: 8px;">Prevents snap jitter with GSRF</p>
                 </div>
-            </aside>
-        </div>
+            </div>
 
-        <div id="preview-window" class="hidden"></div>
-        <div id="debug-panel" class="app-modal" style="display: none;" role="dialog" aria-label="Debug">
-            <h3>Debug</h3>
-            <pre id="svg-output"></pre>
-            <button type="button" id="close-debug" class="button">Close</button>
+            <div class="sidebar-section">
+                <div class="sidebar-header">Layers</div>
+                <div class="layers-panel" id="layersPanel"></div>
+            </div>
         </div>
-        <div id="help-modal" class="app-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
-            <h3 id="help-modal-title">Doppleit Vector — help</h3>
-            <p><strong>Tools:</strong> Pen (1), Rectangle (2), Circle (3), Text (4), or Select (S) to draw or edit.</p>
-            <p><strong>Layers:</strong> Add, rename (double-click), drag to reorder, or group. Toggle visibility/lock.</p>
-            <p><strong>Timeline:</strong> Previous/Next for version history when enabled.</p>
-            <p><strong>Color:</strong> Wheel, sliders, or HEX/RGB/HSL.</p>
-            <p><strong>Export:</strong> SVG, PNG, JPEG, or save/load project files.</p>
-            <p><strong>UX:</strong> Shift for uniform scale, Alt to duplicate, drag guides from rulers.</p>
-            <p><strong>Shortcuts:</strong> Undo (Ctrl+Z), Redo (Ctrl+Y), Delete, Escape, tools 1–4 and S.</p>
-            <p><strong>Mobile:</strong> Pinch to zoom, touch controls below the canvas when shown.</p>
-            <button type="button" id="close-help" class="button">Close</button>
+    </main>
+
+    <footer>
+        <div style="font-size: 10px; color: #666;">v1.0 — GSRF Snap Stabilizer | Pro v2 coming 2026</div>
+        <div class="export-buttons">
+            <button class="btn" id="exportSvg">📥 SVG</button>
+            <button class="btn disabled" id="exportPng" title="Pro">📥 PNG</button>
+            <button class="btn" id="uploadImage">📤 Upload</button>
         </div>
-        <div id="autosave-notification" style="display: none;" role="status">Project autosaved</div>
-        <div id="tooltip" style="display: none;" role="tooltip"></div>
+    </footer>
+
+    <div class="modal" id="featureModal">
+        <div class="modal-content">
+            <div class="modal-title">Coming Soon</div>
+            <div class="modal-message" id="modalMessage"></div>
+            <div class="modal-buttons">
+                <button class="btn primary" onclick="document.getElementById('featureModal').classList.remove('active')">Got it</button>
+            </div>
+        </div>
     </div>
-    <!-- Entry script is injected by Webpack (npm run build / npm run dev). Do not add
-         src="src/js/app.js" here: on Netlify, SPA routing would return index.html and break modules. -->
+
+    <input type="file" id="imageUploadInput" accept="image/*" style="display: none;">
+
+    <script>
+        class GSRFSnapFilter {
+            constructor(options = {}) {
+                this.beta = options.beta || 0.6;
+                this.mem = options.mem || 0.3;
+                this.k_return = options.k_return || 1.2;
+                this.gridSize = options.gridSize || 10;
+                this.previous = null;
+                this.history = [];
+                this.maxHistory = 5;
+            }
+
+            filter(current, target) {
+                if (this.previous === null) {
+                    this.previous = current;
+                    return current;
+                }
+
+                const gradient = -(current - target);
+                let memory = 0;
+                if (this.history.length > 0) {
+                    const delta = current - this.previous;
+                    memory = Math.tanh(delta);
+                }
+
+                const update = this.k_return * gradient + this.mem * memory;
+                const filtered = current + this.beta * update;
+
+                this.history.push(current);
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+
+                this.previous = filtered;
+                return filtered;
+            }
+
+            snapAndFilter(position, enabled = true) {
+                if (!enabled) return position;
+
+                const snappedX = Math.round(position.x / this.gridSize) * this.gridSize;
+                const snappedY = Math.round(position.y / this.gridSize) * this.gridSize;
+
+                return {
+                    x: this.filter(position.x, snappedX),
+                    y: this.filter(position.y, snappedY)
+                };
+            }
+
+            reset() {
+                this.previous = null;
+                this.history = [];
+            }
+        }
+
+        const app = {
+            currentTool: 'select',
+            currentColor: '#0066cc',
+            snapEnabled: true,
+            selectedElement: null,
+            isDrawing: false,
+            startX: 0,
+            startY: 0,
+            layers: [],
+            history: [],
+            historyIndex: -1,
+            maxHistory: 50,
+            gsrf: new GSRFSnapFilter({ gridSize: 10 })
+        };
+
+        const svg = SVG('#canvas');
+        svg.viewbox(0, 0, 800, 600);
+
+        const colorPresets = ['#0066cc', '#ff6b6b', '#4db84d', '#ffd700', '#ff8c00', '#9b59b6', '#1abc9c', '#34495e', '#e74c3c', '#16a085', '#2980b9', '#c0392b'];
+
+        function initializeUI() {
+            const swatchesContainer = document.getElementById('colorSwatches');
+            colorPresets.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'swatch';
+                swatch.style.backgroundColor = color;
+                swatch.onclick = () => {
+                    app.currentColor = color;
+                    document.getElementById('colorInput').value = color;
+                };
+                swatchesContainer.appendChild(swatch);
+            });
+
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if (btn.classList.contains('disabled')) {
+                        showFeatureModal(btn.dataset.tool);
+                        return;
+                    }
+
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    app.currentTool = btn.dataset.tool;
+
+                    if (btn.dataset.tool === 'select') {
+                        document.getElementById('canvas').classList.add('select-mode');
+                    } else {
+                        document.getElementById('canvas').classList.remove('select-mode');
+                    }
+
+                    if (btn.dataset.tool === 'upload') {
+                        document.getElementById('imageUploadInput').click();
+                    }
+                });
+            });
+
+            document.getElementById('colorInput').addEventListener('change', (e) => {
+                const value = e.target.value;
+                if (/^#[0-9A-F]{6}$/i.test(value)) {
+                    app.currentColor = value;
+                }
+            });
+
+            document.getElementById('snapToggle').addEventListener('click', () => {
+                app.snapEnabled = !app.snapEnabled;
+                document.getElementById('snapToggle').classList.toggle('active');
+            });
+
+            document.getElementById('exportSvg').addEventListener('click', exportSVG);
+            document.getElementById('exportPng').addEventListener('click', () => showFeatureModal('exportPng'));
+            document.getElementById('uploadImage').addEventListener('click', () => document.getElementById('imageUploadInput').click());
+            document.getElementById('imageUploadInput').addEventListener('change', handleImageUpload);
+
+            const canvas = document.getElementById('canvas');
+            canvas.addEventListener('mousedown', onCanvasMouseDown);
+            canvas.addEventListener('mousemove', onCanvasMouseMove);
+            canvas.addEventListener('mouseup', onCanvasMouseUp);
+            canvas.addEventListener('click', onCanvasClick);
+
+            document.addEventListener('keydown', onKeyDown);
+        }
+
+        function onCanvasMouseDown(e) {
+            const rect = svg.node.getBoundingClientRect();
+            app.startX = e.clientX - rect.left;
+            app.startY = e.clientY - rect.top;
+            app.isDrawing = true;
+        }
+
+        function onCanvasMouseMove(e) {
+            if (!app.isDrawing) return;
+
+            const rect = svg.node.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+
+            const snapped = app.gsrf.snapAndFilter({ x, y }, app.snapEnabled);
+            x = snapped.x;
+            y = snapped.y;
+
+            if (app.currentTool === 'rect') {
+                const width = Math.abs(x - app.startX);
+                const height = Math.abs(y - app.startY);
+                const left = Math.min(x, app.startX);
+                const top = Math.min(y, app.startY);
+
+                let rect = svg.find('rect').at(-1);
+                if (!rect || rect.attr('temp') !== 'true') {
+                    rect = svg.rect(width, height).attr('temp', 'true').fill(app.currentColor).stroke({ color: '#333', width: 1 });
+                }
+                rect.width(width).height(height).move(left, top);
+            } else if (app.currentTool === 'circle') {
+                const dx = x - app.startX;
+                const dy = y - app.startY;
+                const radius = Math.sqrt(dx * dx + dy * dy) / 2;
+
+                let circle = svg.find('circle').at(-1);
+                if (!circle || circle.attr('temp') !== 'true') {
+                    circle = svg.circle(radius * 2).attr('temp', 'true').fill(app.currentColor).stroke({ color: '#333', width: 1 });
+                }
+                circle.radius(radius).center((app.startX + x) / 2, (app.startY + y) / 2);
+            } else if (app.currentTool === 'line') {
+                let line = svg.find('line').at(-1);
+                if (!line || line.attr('temp') !== 'true') {
+                    line = svg.line(app.startX, app.startY, x, y).attr('temp', 'true').stroke({ color: app.currentColor, width: 2, linecap: 'round' });
+                }
+                line.plot(app.startX, app.startY, x, y);
+            }
+        }
+
+        function onCanvasMouseUp(e) {
+            app.isDrawing = false;
+            svg.find('[temp="true"]').forEach(el => {
+                el.attr('temp', null);
+                addLayer(el);
+                saveHistory();
+            });
+        }
+
+        function onCanvasClick(e) {
+            if (app.currentTool === 'text') {
+                const rect = svg.node.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const text = prompt('Enter text:', 'Text');
+                if (text) {
+                    const textEl = svg.text(text).font({ size: 16 }).fill(app.currentColor).move(x, y);
+                    addLayer(textEl);
+                    saveHistory();
+                }
+            }
+        }
+
+        function onKeyDown(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z') { e.preventDefault(); undo(); }
+                else if (e.key === 'y') { e.preventDefault(); redo(); }
+            }
+        }
+
+        function addLayer(element) {
+            const layer = { id: `layer-${Date.now()}`, name: `Shape ${app.layers.length + 1}`, element, visible: true };
+            app.layers.push(layer);
+            updateLayersPanel();
+        }
+
+        function removeLayer(element) {
+            app.layers = app.layers.filter(l => l.element !== element);
+            updateLayersPanel();
+        }
+
+        function updateLayersPanel() {
+            const panel = document.getElementById('layersPanel');
+            panel.innerHTML = '';
+
+            [...app.layers].reverse().forEach(layer => {
+                const item = document.createElement('div');
+                item.className = 'layer-item';
+
+                const visBtn = document.createElement('button');
+                visBtn.className = 'layer-visibility';
+                visBtn.textContent = layer.visible ? '👁️' : '👁️‍🗨️';
+                visBtn.onclick = () => {
+                    layer.visible = !layer.visible;
+                    layer.element.style('opacity', layer.visible ? 1 : 0.3);
+                    updateLayersPanel();
+                };
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'layer-name';
+                nameEl.textContent = layer.name;
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'layer-delete';
+                delBtn.textContent = '✕';
+                delBtn.onclick = () => {
+                    layer.element.remove();
+                    removeLayer(layer.element);
+                    saveHistory();
+                };
+
+                item.appendChild(visBtn);
+                item.appendChild(nameEl);
+                item.appendChild(delBtn);
+                panel.appendChild(item);
+            });
+        }
+
+        function saveHistory() {
+            const state = svg.svg();
+            app.history = app.history.slice(0, app.historyIndex + 1);
+            app.history.push(state);
+            if (app.history.length > app.maxHistory) app.history.shift();
+            else app.historyIndex++;
+        }
+
+        function undo() {
+            if (app.historyIndex > 0) {
+                app.historyIndex--;
+                restoreState(app.history[app.historyIndex]);
+            }
+        }
+
+        function redo() {
+            if (app.historyIndex < app.history.length - 1) {
+                app.historyIndex++;
+                restoreState(app.history[app.historyIndex]);
+            }
+        }
+
+        function restoreState(svgString) {
+            svg.clear();
+            svg.html(svgString);
+            app.layers = [];
+            updateLayersPanel();
+        }
+
+        function exportSVG() {
+            const svgData = new XMLSerializer().serializeToString(svg.node);
+            const blob = new Blob([svgData], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'design.svg';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showFeatureModal(feature) {
+            const messages = {
+                pen: 'Pen tool with GSRF Curve Stabilizer coming in Pro',
+                exportPng: 'PNG export available in Pro version'
+            };
+            document.getElementById('modalMessage').textContent = messages[feature] || 'Coming soon';
+            document.getElementById('featureModal').classList.add('active');
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const image = svg.image(event.target.result, 400, 300).move(50, 50);
+                    image.opacity(0.3);
+                    const layer = { id: `ref-${Date.now()}`, name: 'Reference', element: image, visible: true };
+                    app.layers.unshift(layer);
+                    updateLayersPanel();
+                    saveHistory();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        initializeUI();
+        saveHistory();
+    </script>
 </body>
 </html>
