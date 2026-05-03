@@ -37,8 +37,9 @@ export class CircleTool extends Tool {
         const dy = currentPoint.y - this.startPoint.y;
         this.currentShape.radius = Math.sqrt(dx * dx + dy * dy);
         
-        // Draw preview
-        this.drawShape(context);
+        if (context) {
+            this.drawShape(context);
+        }
     }
 
     stopDrawing(event, canvas, context) {
@@ -81,16 +82,5 @@ export class CircleTool extends Tool {
         context.stroke();
         
         context.restore();
-    }
-
-    getCanvasPoint(event, canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        return {
-            x: (event.clientX - rect.left) * scaleX,
-            y: (event.clientY - rect.top) * scaleY
-        };
     }
 }

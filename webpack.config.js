@@ -4,7 +4,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
-module.exports = {
+module.exports = (env, argv) => ({
   entry: './src/js/app.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -104,9 +104,14 @@ module.exports = {
     hot: true,
     historyApiFallback: true
   },
-  performance: {
-    hints: 'warning',
-    maxEntrypointSize: 512000,
-    maxAssetSize: 512000
-  }
-}; 
+  // Dev bundles include webpack-dev-server + HMR — size hints are misleading.
+  // Production uses pdf-lib / html2pdf; thresholds reflect real chunk sizes.
+  performance:
+    argv.mode === 'development'
+      ? false
+      : {
+          hints: 'warning',
+          maxEntrypointSize: 3 * 1024 * 1024,
+          maxAssetSize: 2 * 1024 * 1024
+        }
+});

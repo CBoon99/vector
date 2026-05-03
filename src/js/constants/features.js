@@ -1,5 +1,10 @@
 export const FEATURE_AVAILABILITY = {
     desktop: {
+        basicDrawing: true,
+        basicExport: true,
+        advancedExport: true,
+        basicLayers: true,
+        v2: true,
         advancedDrawing: true,
         layerEffects: true,
         pathOperations: true,
@@ -8,6 +13,11 @@ export const FEATURE_AVAILABILITY = {
         pluginSystem: true
     },
     mobile: {
+        basicDrawing: true,
+        basicExport: true,
+        advancedExport: true,
+        basicLayers: true,
+        v2: true,
         advancedDrawing: false,
         layerEffects: false,
         pathOperations: false,

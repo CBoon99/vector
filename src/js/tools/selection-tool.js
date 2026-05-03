@@ -1,11 +1,8 @@
 import { Tool } from './tool.js';
 
 export class SelectionTool extends Tool {
-    constructor(stateManager, layerManager) {
-        super(stateManager, layerManager);
-        this.name = 'selection';
-        this.icon = 'selection-icon';
-        this.cursor = 'default';
+    constructor() {
+        super('Selection', '↖', 'default');
         this.selectedObjects = new Set();
         this.selectionBox = null;
         this.isDragging = false;
@@ -15,11 +12,10 @@ export class SelectionTool extends Tool {
     }
 
     startDrawing(event, canvas, context) {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const pt = this.getCanvasPoint(event, canvas);
+        const x = pt.x;
+        const y = pt.y;
 
-        // Check if clicking on a resize handle
         const handle = this.getResizeHandle(x, y);
         if (handle) {
             this.resizeHandle = handle;
@@ -28,7 +24,6 @@ export class SelectionTool extends Tool {
             return;
         }
 
-        // Check if clicking on a selected object
         const clickedObject = this.getObjectAtPosition(x, y);
         if (clickedObject) {
             if (!event.shiftKey) {
@@ -40,7 +35,6 @@ export class SelectionTool extends Tool {
             return;
         }
 
-        // Start new selection box
         if (!event.shiftKey) {
             this.selectedObjects.clear();
         }
@@ -57,9 +51,9 @@ export class SelectionTool extends Tool {
     draw(event, canvas, context) {
         if (!this.isDragging) return;
 
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const pt = this.getCanvasPoint(event, canvas);
+        const x = pt.x;
+        const y = pt.y;
 
         if (this.resizeHandle) {
             this.resizeObject(x, y);
@@ -69,13 +63,14 @@ export class SelectionTool extends Tool {
             this.moveSelectedObjects(x, y);
         }
 
-        this.drawSelection(context);
+        if (context) {
+            this.drawSelection(context);
+        }
     }
 
     drawSelection(context) {
         context.save();
 
-        // Draw selection box
         if (this.selectionBox) {
             context.strokeStyle = '#0095ff';
             context.setLineDash([5, 5]);
@@ -88,17 +83,14 @@ export class SelectionTool extends Tool {
             context.setLineDash([]);
         }
 
-        // Draw selection for each selected object
-        this.selectedObjects.forEach(object => {
+        this.selectedObjects.forEach((object) => {
             const bounds = this.getObjectBounds(object);
-            
-            // Draw selection rectangle
+
             context.strokeStyle = '#0095ff';
             context.setLineDash([5, 5]);
             context.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
             context.setLineDash([]);
 
-            // Draw resize handles
             this.drawResizeHandles(context, bounds);
         });
 
@@ -110,7 +102,7 @@ export class SelectionTool extends Tool {
         context.fillStyle = '#ffffff';
         context.strokeStyle = '#0095ff';
 
-        handles.forEach(handle => {
+        handles.forEach((handle) => {
             context.beginPath();
             context.rect(
                 handle.x - this.handleSize / 2,
@@ -154,11 +146,9 @@ export class SelectionTool extends Tool {
         if (!this.resizeHandle) return;
 
         const { object, handle } = this.resizeHandle;
-        const bounds = this.getObjectBounds(object);
         const dx = x - this.dragStart.x;
         const dy = y - this.dragStart.y;
 
-        // Update object based on handle type
         switch (handle) {
             case 'nw':
                 object.x += dx;
@@ -194,6 +184,8 @@ export class SelectionTool extends Tool {
                 object.x += dx;
                 object.width -= dx;
                 break;
+            default:
+                break;
         }
 
         this.dragStart = { x, y };
@@ -204,7 +196,7 @@ export class SelectionTool extends Tool {
         const dx = x - this.dragStart.x;
         const dy = y - this.dragStart.y;
 
-        this.selectedObjects.forEach(object => {
+        this.selectedObjects.forEach((object) => {
             object.x += dx;
             object.y += dy;
             this.layerManager.updateLayer(object);
@@ -214,32 +206,60 @@ export class SelectionTool extends Tool {
     }
 
     updateSelectionBox(x, y) {
+        if (!this.selectionBox) return;
         this.selectionBox.width = x - this.selectionBox.x;
         this.selectionBox.height = y - this.selectionBox.y;
 
-        // Select objects within the box
+        let bx = this.selectionBox.x;
+        let by = this.selectionBox.y;
+        let bw = this.selectionBox.width;
+        let bh = this.selectionBox.height;
+        if (bw < 0) {
+            bx += bw;
+            bw = Math.abs(bw);
+        }
+        if (bh < 0) {
+            by += bh;
+            bh = Math.abs(bh);
+        }
+
+        this.selectedObjects.clear();
         const layers = this.layerManager.getLayers();
-        layers.forEach(layer => {
-            if (this.isObjectInBox(layer, this.selectionBox)) {
-                this.selectedObjects.add(layer);
-            }
+        layers.forEach((layer) => {
+            if (layer.hidden) return;
+            (layer.objects || []).forEach((obj) => {
+                if (this.isObjectInBox(obj, { x: bx, y: by, width: bw, height: bh })) {
+                    this.selectedObjects.add(obj);
+                }
+            });
         });
     }
 
     isObjectInBox(object, box) {
         const bounds = this.getObjectBounds(object);
-        return (
-            bounds.x >= box.x &&
-            bounds.y >= box.y &&
-            bounds.x + bounds.width <= box.x + box.width &&
-            bounds.y + bounds.height <= box.y + box.height
-        );
+        const bx2 = box.x + box.width;
+        const by2 = box.y + box.height;
+        const ox2 = bounds.x + bounds.width;
+        const oy2 = bounds.y + bounds.height;
+        return bounds.x < bx2 && ox2 > box.x && bounds.y < by2 && oy2 > box.y;
     }
 
     getObjectBounds(object) {
+        if (!object) return { x: 0, y: 0, width: 0, height: 0 };
+        if (object.type === 'circle') {
+            const r = object.radius || 0;
+            return { x: object.x - r, y: object.y - r, width: 2 * r, height: 2 * r };
+        }
+        if (object.type === 'raster') {
+            const w =
+                object.width != null ? object.width : object.image?.naturalWidth || object.editCanvas?.width || 0;
+            const h =
+                object.height != null ? object.height : object.image?.naturalHeight || object.editCanvas?.height || 0;
+            return { x: object.x || 0, y: object.y || 0, width: w, height: h };
+        }
         return {
-            x: object.x,
-            y: object.y,
+            x: object.x ?? 0,
+            y: object.y ?? 0,
             width: object.width || 0,
             height: object.height || 0
         };
@@ -249,8 +269,13 @@ export class SelectionTool extends Tool {
         const layers = this.layerManager.getLayers();
         for (let i = layers.length - 1; i >= 0; i--) {
             const layer = layers[i];
-            if (this.isPointInObject(x, y, layer)) {
-                return layer;
+            if (layer.hidden) continue;
+            const objs = layer.objects || [];
+            for (let j = objs.length - 1; j >= 0; j--) {
+                const obj = objs[j];
+                if (this.isPointInObject(x, y, obj)) {
+                    return obj;
+                }
             }
         }
         return null;
@@ -267,18 +292,55 @@ export class SelectionTool extends Tool {
     }
 
     isPointNear(x, y, point) {
-        const distance = Math.sqrt(Math.pow(x - point.x, 2) + Math.pow(y - point.y, 2));
+        const distance = Math.sqrt((x - point.x) ** 2 + (y - point.y) ** 2);
         return distance < this.handleSize;
     }
 
-    finishDrawing() {
-        if (this.isDragging) {
-            this.stateManager.saveState();
+    stopDrawing(_event, _canvas, _context) {
+        if (!this.isDragging) return;
+
+        if (this.selectionBox) {
+            let bx = this.selectionBox.x;
+            let by = this.selectionBox.y;
+            let bw = this.selectionBox.width;
+            let bh = this.selectionBox.height;
+            if (bw < 0) {
+                bx += bw;
+                bw = Math.abs(bw);
+            }
+            if (bh < 0) {
+                by += bh;
+                bh = Math.abs(bh);
+            }
+            this.selectedObjects.clear();
+            const layers = this.layerManager.getLayers();
+            layers.forEach((layer) => {
+                if (layer.hidden) return;
+                (layer.objects || []).forEach((obj) => {
+                    if (this.isObjectInBox(obj, { x: bx, y: by, width: bw, height: bh })) {
+                        this.selectedObjects.add(obj);
+                    }
+                });
+            });
         }
+
+        if ((this.resizeHandle || this.selectedObjects.size > 0 || this.selectionBox) && this.layerManager) {
+            this.stateManager.saveHistory();
+        }
+
         this.isDragging = false;
         this.dragStart = null;
         this.resizeHandle = null;
         this.selectionBox = null;
+    }
+
+    deleteSelectedObjects() {
+        if (this.selectedObjects.size === 0) return;
+
+        this.layerManager.deleteObjects(Array.from(this.selectedObjects));
+        this.selectedObjects.clear();
+        this.stateManager.saveHistory();
+        this.stateManager.canvasManager?.draw?.();
     }
 
     cleanup() {
@@ -294,16 +356,4 @@ export class SelectionTool extends Tool {
             this.deleteSelectedObjects();
         }
     }
-
-    deleteSelectedObjects() {
-        if (this.selectedObjects.size === 0) return;
-
-        this.selectedObjects.forEach(object => {
-            this.layerManager.removeLayer(object.id);
-        });
-
-        this.selectedObjects.clear();
-        this.stateManager.saveState();
-        this.canvasManager.draw();
-    }
-} 
+}

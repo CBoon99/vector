@@ -55,4 +55,23 @@ export class Tool {
     getIcon() {
         return this.icon;
     }
+
+    /**
+     * Canvas/world-space point for pointer events (respects zoom/pan via CanvasManager).
+     */
+    getCanvasPoint(event, canvas) {
+        const cm = this.stateManager?.canvasManager;
+        if (cm && event && typeof event.clientX === 'number') {
+            return cm.getMousePosition(event);
+        }
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const cx = event?.clientX ?? 0;
+        const cy = event?.clientY ?? 0;
+        return {
+            x: (cx - rect.left) * scaleX,
+            y: (cy - rect.top) * scaleY
+        };
+    }
 }

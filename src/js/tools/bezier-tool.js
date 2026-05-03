@@ -2,11 +2,8 @@ import { Tool } from './tool.js';
 import { generateId } from '../utils/id-generator.js';
 
 export class BezierTool extends Tool {
-    constructor(stateManager, layerManager) {
-        super(stateManager, layerManager);
-        this.name = 'bezier';
-        this.icon = 'bezier-icon';
-        this.cursor = 'crosshair';
+    constructor() {
+        super('Bezier', '〰', 'crosshair');
         this.points = [];
         this.controlPoints = [];
         this.isDrawing = false;
@@ -15,9 +12,9 @@ export class BezierTool extends Tool {
     }
 
     startDrawing(event, canvas, context) {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const pt = this.getCanvasPoint(event, canvas);
+        const x = pt.x;
+        const y = pt.y;
 
         if (!this.isDrawing) {
             // Start new path
@@ -53,15 +50,21 @@ export class BezierTool extends Tool {
             lastPoint.controlPoint2 = controlPoint1;
         }
 
-        this.draw(context);
+        this.renderBezierPreview(context);
     }
 
-    draw(context) {
+    /** Standard tool hook used by App overlay pipeline */
+    draw(event, canvas, context) {
+        if (!context) return;
+        this.renderBezierPreview(context);
+    }
+
+    renderBezierPreview(context) {
         if (this.points.length === 0) return;
 
         context.save();
         context.strokeStyle = this.stateManager.getState().currentColor;
-        context.lineWidth = this.stateManager.getState().currentStrokeWidth;
+        context.lineWidth = this.stateManager.getState().strokeWidth || 1;
 
         // Draw the path
         context.beginPath();
@@ -125,9 +128,9 @@ export class BezierTool extends Tool {
     movePoint(event, canvas) {
         if (!this.selectedPoint && !this.selectedControlPoint) return;
 
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const pt = this.getCanvasPoint(event, canvas);
+        const x = pt.x;
+        const y = pt.y;
 
         if (this.selectedPoint !== null) {
             // Move anchor point
@@ -161,9 +164,9 @@ export class BezierTool extends Tool {
     }
 
     selectPoint(event, canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const pt = this.getCanvasPoint(event, canvas);
+        const x = pt.x;
+        const y = pt.y;
 
         // Check for control point selection first
         for (let i = 0; i < this.points.length; i++) {
@@ -206,11 +209,11 @@ export class BezierTool extends Tool {
                 type: 'bezier',
                 points: this.points,
                 stroke: this.stateManager.getState().currentColor,
-                strokeWidth: this.stateManager.getState().currentStrokeWidth
+                strokeWidth: this.stateManager.getState().strokeWidth || 1
             };
 
-            this.layerManager.addLayer(path);
-            this.stateManager.saveState();
+            this.layerManager.addObject(path);
+            this.stateManager.saveHistory();
         }
 
         this.points = [];

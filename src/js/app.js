@@ -46,7 +46,9 @@ class App {
         this.currentTool = null;
         this.smartConstraints = new SmartConstraintsTool();
         this.performanceBanner = new PerformanceBanner();
-        
+        this._delegateTool = null;
+        this._lastPointerEvent = null;
+
         this.initializeServices();
         this.initializeComponents();
         this.setupEventListeners();
@@ -64,6 +66,8 @@ class App {
         if (canvasSection) {
             canvasSection.classList.remove('hidden');
         }
+
+        this.selectTool('select-tool');
     }
 
     initializeServices() {
@@ -88,9 +92,11 @@ class App {
             onDrawLayers: this.drawLayers.bind(this),
             onZoom: this.handleZoom.bind(this)
         });
+        this.canvasManager.onDrawOverlay = (ctx) => this.drawToolOverlay(ctx);
 
         // Initialize tools
         this.initializeTools();
+        this.stateManager.saveHistory();
     }
 
     initializeComponents() {
@@ -326,17 +332,10 @@ class App {
     }
 
     initializeDeviceFeatures() {
-        // Use EnvironmentManager instead of DeviceService
-        const features = {
-            canUseVectorization: EnvironmentManager.canUse('SVG'),
-            canUseRealTime: EnvironmentManager.canUse('RealTime'),
-            canUseAutoPlay: EnvironmentManager.canUse('AutoPlay'),
-            canUseExport: EnvironmentManager.canUse('Export')
-        };
-        
-        this.updateToolAvailability(features);
-        this.updateMenuAvailability(features);
-        this.updateLayerControls(features);
+        const enabled = DeviceService.getAvailableFeatures();
+        this.updateToolAvailability(enabled);
+        this.updateMenuAvailability(enabled);
+        this.updateLayerControls(enabled);
     }
 
     initializeRasterize() {
@@ -398,6 +397,20 @@ class App {
         this.setupZoomControls();
         this.setupSnapToGridControls();
         this.setupExportControls();
+        this.setupClearCanvasListener();
+    }
+
+    setupClearCanvasListener() {
+        const clearBtn = document.getElementById('clear-canvas');
+        if (!clearBtn) return;
+        clearBtn.addEventListener('click', () => {
+            const layer = this.layerManager.getActiveLayer();
+            if (!layer) return;
+            layer.objects = [];
+            this.stateManager.saveHistory();
+            this.canvasManager.draw();
+            UIService.showMessage('Canvas cleared', 'info');
+        });
     }
 
     setupFileUploadListeners() {
@@ -454,6 +467,13 @@ class App {
         const closeHelp = document.getElementById('close-help');
         if (!helpModal) {
             return;
+        }
+
+        const headerHelp = document.getElementById('header-help');
+        if (headerHelp) {
+            headerHelp.addEventListener('click', () => {
+                UIService.showModal('help-modal');
+            });
         }
 
         if (closeHelp) {
@@ -706,9 +726,6 @@ class App {
 
         // Set up tool-specific event handlers
         switch (toolId) {
-            case 'polygon-tool':
-                this.setupPolygonToolHandlers();
-                break;
             case 'shape-tool':
                 this.setupShapeToolHandlers();
                 break;
@@ -721,15 +738,33 @@ class App {
         return this.stateManager.getState().currentColor;
     }
 
-    handleDrawStart(point) {
+    resolveToolbarToolInstance(toolId) {
+        const map = {
+            'select-tool': this.tools?.select,
+            'pen-tool': this.tools?.pen,
+            'rect-tool': this.tools?.rectangle,
+            'circle-tool': this.tools?.circle,
+            'polygon-tool': this.tools?.polygon,
+            'text-tool': this.tools?.text
+        };
+        return map[toolId] || null;
+    }
+
+    drawToolOverlay(ctx) {
+        const tool = this._delegateTool;
+        const ev = this._lastPointerEvent;
+        if (!tool || !ev || !ctx) return;
+        const tid = this.stateManager.currentTool;
+        if (tid === 'pixel-tool' || tid === 'shape-tool' || tid === 'gradient-tool') return;
+        tool.draw(ev, this.canvasManager.canvas, ctx);
+    }
+
+    handleDrawStart(point, event) {
         try {
             if (this.stateManager.currentTool === 'pixel-tool') {
                 const color = this.getStrokeColor();
-                console.log(`[DEBUG] Pixel tool: Click at (${point.x}, ${point.y}), color: ${color}`);
 
-                // Validate color
                 if (!color || color.toLowerCase() === 'undefined') {
-                    console.warn('[DEBUG] Pixel tool: Invalid color selected');
                     UIService.showMessage('Please select a color first', 'warning');
                     return;
                 }
@@ -740,23 +775,34 @@ class App {
                     point.y
                 );
                 if (obj) {
-                    console.log(`[DEBUG] Found raster at (${obj.x}, ${obj.y}) size ${obj.width}x${obj.height}`);
                     pixelEdit.paintPixelOnRaster(obj, point.x, point.y, color);
                     this.canvasManager.draw();
-                } else {
-                    console.warn(`[DEBUG] No raster found under point (${point.x}, ${point.y})`);
                 }
                 return;
             }
-            const constrainedPoint = this.smartConstraints.applyConstraints(point);
-            this.stateManager.startDrawing(constrainedPoint);
-            this.canvasManager.draw();
+
+            if (
+                this.stateManager.currentTool === 'shape-tool' ||
+                this.stateManager.currentTool === 'eyedropper-tool' ||
+                this.stateManager.currentTool === 'gradient-tool' ||
+                this.stateManager.currentTool === 'bezier-tool'
+            ) {
+                return;
+            }
+
+            const tool = this.resolveToolbarToolInstance(this.stateManager.currentTool);
+            if (!tool || !event) return;
+
+            this._delegateTool = tool;
+            this._lastPointerEvent = event;
+            tool.startDrawing(event, this.canvasManager.canvas, this.canvasManager.bufferCtx);
+            this.canvasManager.scheduleDraw();
         } catch (error) {
             ErrorHandler.handle(error, 'handleDrawStart');
         }
     }
 
-    handleDraw(point) {
+    handleDraw(point, event) {
         try {
             if (this.stateManager.currentTool === 'pixel-tool') {
                 const obj = pixelEdit.findRasterUnderPoint(
@@ -767,26 +813,40 @@ class App {
                 if (obj) {
                     pixelEdit.paintPixelOnRaster(obj, point.x, point.y, this.getStrokeColor());
                     this.canvasManager.draw();
-                } else {
-                    // Silently ignore if dragging outside raster area
                 }
                 return;
             }
-            const constrainedPoint = this.smartConstraints.applyConstraints(point);
-            this.stateManager.updateDrawing(constrainedPoint);
-            this.canvasManager.draw();
+
+            if (this._delegateTool && event) {
+                this._lastPointerEvent = event;
+                this._delegateTool.draw(event, this.canvasManager.canvas, null);
+                this.canvasManager.scheduleDraw();
+                return;
+            }
         } catch (error) {
             ErrorHandler.handle(error, 'handleDraw');
         }
     }
 
-    handleDrawEnd(point) {
+    handleDrawEnd(point, event) {
         try {
             if (this.stateManager.currentTool === 'pixel-tool') {
                 return;
             }
-            this.stateManager.finishDrawing(point);
-            this.canvasManager.draw();
+            if (this._delegateTool) {
+                const tool = this._delegateTool;
+                const tid = this.stateManager.currentTool;
+                if (typeof tool.stopDrawing === 'function') {
+                    tool.stopDrawing(event, this.canvasManager.canvas, this.canvasManager.bufferCtx);
+                }
+                if (tid === 'select-tool' && tool.selectedObjects) {
+                    this.stateManager.setSelection(Array.from(tool.selectedObjects));
+                }
+                this._delegateTool = null;
+                this._lastPointerEvent = null;
+                this.canvasManager.scheduleDraw();
+                return;
+            }
         } catch (error) {
             ErrorHandler.handle(error, 'handleDrawEnd');
         }
@@ -991,9 +1051,9 @@ class App {
     }
 
     initializeEditControls() {
-        const undoBtn = document.getElementById('undo-btn');
-        const redoBtn = document.getElementById('redo-btn');
-        const deleteBtn = document.getElementById('delete-btn');
+        const undoBtn = document.getElementById('undo-btn') || document.getElementById('undo');
+        const redoBtn = document.getElementById('redo-btn') || document.getElementById('redo');
+        const deleteBtn = document.getElementById('delete-btn') || document.getElementById('delete');
 
         if (undoBtn) undoBtn.addEventListener('click', () => this.handleUndo());
         if (redoBtn) redoBtn.addEventListener('click', () => this.handleRedo());
@@ -1175,12 +1235,13 @@ class App {
 
     initializeTools() {
         this.tools = {
-            select: new SelectionTool(this.stateManager, this.layerManager),
+            select: new SelectionTool(),
+            pen: new PenTool(),
             rectangle: new RectangleTool(),
             circle: new CircleTool(),
-            polygon: new PolygonTool(this.stateManager, this.layerManager),
-            bezier: new BezierTool(this.stateManager, this.layerManager),
-            text: new TextTool(this.stateManager, this.layerManager),
+            polygon: new PolygonTool(),
+            bezier: new BezierTool(),
+            text: new TextTool(),
             smartShape: new SmartShapeTool(),
             smartConstraints: new SmartConstraintsTool()
         };
@@ -1207,10 +1268,12 @@ class App {
         }
     }
 
-    updateToolUI(toolName) {
-        // Update active tool button
-        document.querySelectorAll('[data-tool]').forEach(element => {
-            element.classList.toggle('active', element.getAttribute('data-tool') === toolName);
+    updateToolUI(toolId) {
+        document.querySelectorAll('#drawing-tools button').forEach((btn) => {
+            btn.classList.toggle('active', btn.id === toolId);
+        });
+        document.querySelectorAll('[data-tool]').forEach((element) => {
+            element.classList.toggle('active', element.getAttribute('data-tool') === toolId);
         });
     }
 

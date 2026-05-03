@@ -1,297 +1,337 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doppleit Vector — Vector editor that doesn't jitter</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        
-        /* Hero & Marketing Sections */
-        .hero { background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border-bottom: 2px solid #0066cc; padding: 0.6rem 1.2rem; max-height: 15vh; overflow-y: auto; }
-        .hero h1 { font-size: 1.3rem; margin: 0 0 0.1rem 0; background: linear-gradient(135deg, #fff, #0066cc); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .hero .tagline { font-size: 0.85rem; color: #aaa; margin: 0.1rem 0; }
-        .hero .sub { font-size: 0.7rem; color: #999; margin: 0.2rem 0 0.3rem 0; line-height: 1.3; max-width: 600px; }
-        .cta-button { background: #0066cc; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; margin: 0.3rem 0 0; transition: all 0.2s; }
-        .cta-button:hover { background: #0052a3; }
-
-        .section { margin: 0; display: none; }
-        .section h2 { font-size: 1.3rem; margin: 0.8rem 0 0.4rem 0; color: #fff; }
-        .section p { font-size: 0.9rem; line-height: 1.5; color: #bbb; margin: 0.4rem 0; }
-
-        .benefits { display: none; }
-        .benefit-card { background: #222; border: 1px solid #333; border-radius: 8px; padding: 1rem; }
-        .benefit-card { font-size: 0.9rem; line-height: 1.4; }
-        .benefit-card span { display: block; font-size: 0.8rem; color: #888; margin-top: 0.4rem; }
-
-        .demo-box { display: none; }
-
-        .tools-bar { display: none; }
-        .tools-bar span { background: #2a2a2a; padding: 0.5rem 0.8rem; border-radius: 4px; font-size: 0.85rem; }
-
-        .footer-text { display: none; }
-        
-        /* Editor */
-        main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
-        .toolbar { background: #222; border-right: 1px solid #333; padding: 8px; display: flex; flex-direction: column; gap: 4px; width: 48px; }
-        .tool-btn { width: 32px; height: 32px; border: 1px solid #333; background: #2a2a2a; color: #999; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .tool-btn:hover { background: #333; border-color: #444; }
-        .tool-btn.active { background: #0066cc; border-color: #0066cc; color: #fff; }
-        
-        .canvas-container { flex: 1; display: flex; flex-direction: column; background: #1a1a1a; }
-        canvas#canvas { flex: 1; background: white; display: block; cursor: crosshair; }
-        
-        .sidebar { width: 280px; background: #222; border-left: 1px solid #333; display: flex; flex-direction: column; }
-        .sidebar-section { border-bottom: 1px solid #333; }
-        .sidebar-header { padding: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #999; background: #1a1a1a; }
-        .sidebar-content { padding: 12px; }
-        .color-input { width: 100%; background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-bottom: 8px; }
-        .color-input:focus { outline: none; border-color: #0066cc; }
-        .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-        .swatch { width: 100%; aspect-ratio: 1; border-radius: 4px; border: 1px solid #333; cursor: pointer; transition: all 0.2s; }
-        .swatch:hover { border-color: #666; }
-        
-        footer { background: #222; border-top: 1px solid #333; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; height: 48px; font-size: 12px; color: #999; }
-        .export-buttons { display: flex; gap: 8px; }
-        .btn { background: #2a2a2a; border: 1px solid #333; color: #e0e0e0; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
-        .btn:hover:not(:disabled) { background: #333; border-color: #444; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        @media (max-width: 768px) {
-            .benefits { grid-template-columns: 1fr; }
-            .hero { max-height: 60vh; }
-        }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- CSP is set in netlify.toml for production. Avoid a second strict meta policy here: it
+         blocked style-loader and inline style attributes, and could stack with header CSP. -->
+    <title>Doppleit Vector — Free in-browser vector editor, SVG &amp; image tools</title>
+    <meta name="description" content="Doppleit Vector is a free, client-side web app to draw, import images (JPG, PNG, WebP, SVG), vectorize with edge trace or cell poster, paint pixels, manage layers, and export. Runs in your browser with JavaScript. Open source.">
+    <meta name="keywords" content="vector editor, free vector graphics, browser vector editor, SVG editor online, in-browser design tool, Doppleit Vector, image to vector, lightweight illustrator alternative, web canvas, vanilla JavaScript">
+    <meta name="author" content="Carl Boon" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0c0c0e" />
+    <link rel="canonical" href="https://dopple-it-vectorise.netlify.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Doppleit Vector" />
+    <meta property="og:title" content="Doppleit Vector — Free in-browser vector editor" />
+    <meta property="og:description" content="Draw and edit vector-style graphics, import images, optional trace vectorization, pixel paint on bitmaps, layers, and export. Runs entirely in the browser. Open source on GitHub." />
+    <meta property="og:url" content="https://dopple-it-vectorise.netlify.app/" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Doppleit Vector — Free in-browser vector editor" />
+    <meta name="twitter:description" content="Client-side vector graphics demo: import, vectorize, pixel edit, layers, export. No install." />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90' font-family='DM%20Sans' fill='%23e8913a'%3ED%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="src/css/styles.css" />
+    <link rel="stylesheet" href="src/css/app-shell.css" />
+    <script type="application/ld+json" nonce="doppleit">
+    {"@context":"https://schema.org","@type":"WebApplication","name":"Doppleit Vector","description":"In-browser vector graphics editor with import, vectorization, layers, and export.","url":"https://dopple-it-vectorise.netlify.app/","applicationCategory":"DesignApplication","operatingSystem":"Web browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true,"codeRepository":"https://github.com/CBoon99/vector","author":{"@type":"Person","name":"Carl Boon"}}
+    </script>
 </head>
 <body>
-    <header class="hero">
-        <h1>Doppleit Vector</h1>
-        <p class="tagline">The first vector editor that doesn't jitter, drift, or fight you.</p>
-        <p class="sub">Snap. Draw. Scale. Rotate. Everything stays exactly where you put it — thanks to GSRF, the same stability engine used in quantum error correction.</p>
-        <button class="cta-button">Try it free — no sign-up</button>
-
-        <div class="section">
-            <h2>Why everything else feels broken</h2>
-            <p>Most vector editors let tiny recursive errors build up. Every drag, snap, or transform adds a little jitter or drift. Over time it gets annoying.</p>
-            <p>Doppleit Vector stops those errors at the source with GSRF — a deterministic stability layer originally built for quantum systems.</p>
-        </div>
-
-        <div class="section">
-            <h2>Finally, a vector editor that feels good</h2>
-            <div class="benefits">
-                <div class="benefit-card">🎯 <strong>Snap without the seizure</strong><span>No more fighting the grid. Objects glide into place cleanly.</span></div>
-                <div class="benefit-card">✍️ <strong>Curves that actually listen</strong><span>Pro v2 — your shaky hand gets filtered into smooth, perfect curves.</span></div>
-                <div class="benefit-card">🔄 <strong>Transforms that don't drift</strong><span>Scale and rotate all day. Your shape stays exactly where you left it.</span></div>
-                <div class="benefit-card">🧠 <strong>No more "why did it do that?"</strong><span>The math just works. You focus on designing, not debugging the tool.</span></div>
-            </div>
-        </div>
-
-        <div class="demo-box">
-            🎯 <strong>Try it now:</strong> Drag any object near a grid line. Notice how it snaps perfectly with zero jitter. That's GSRF working.
-        </div>
-
-        <div class="section">
-            <h2>Simple tools. No fuss.</h2>
-            <div class="tools-bar">
-                <span>🖱️ Select</span>
-                <span>⬛ Rectangle</span>
-                <span>● Circle</span>
-                <span>/ Line</span>
-                <span>T Text</span>
-                <span>✏️ Freehand</span>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Pro v2 coming 2026</h2>
-            <p>Curve stabilization • Advanced drift protection • Pattern tools • More layers • Export presets</p>
-        </div>
-
-        <div class="footer-text">
-            <strong>v1.0</strong> — Powered by GSRF™ Snap Stabilizer<br>
-            Free forever for personal use • SVG & PNG export • Import your own files
-        </div>
-    </header>
-
-    <main>
-        <div class="toolbar">
-            <button class="tool-btn active" data-tool="draw" title="Draw">✏️</button>
-            <button class="tool-btn" data-tool="select" title="Select">🖱️</button>
-            <button class="tool-btn" data-tool="colors" title="Colors">🎨</button>
-            <button class="tool-btn" data-tool="export" title="Export">📥</button>
-        </div>
-
-        <div class="canvas-container">
-            <canvas id="canvas"></canvas>
-        </div>
-
-        <div class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-header">Colors</div>
-                <div class="sidebar-content">
-                    <input type="text" id="colorInput" class="color-input" value="#0066cc" maxlength="7">
-                    <div class="color-swatches" id="colorSwatches"></div>
+    <div id="app">
+        <header class="app-header" id="header">
+            <div class="app-header__brand">
+                <span class="app-header__logo" aria-hidden="true">DV</span>
+                <div>
+                    <h1 class="app-header__title">Doppleit Vector</h1>
+                    <p id="tagline" class="app-header__tagline">Create and edit vector graphics in your browser.</p>
                 </div>
             </div>
+            <button type="button" id="header-help" class="button">Help</button>
+        </header>
+
+        <div class="app-workspace">
+            <aside class="app-rail app-rail--left" aria-label="Import and color">
+                <div class="app-rail__scroll">
+                    <section id="upload-section">
+                        <div id="upload-area">
+                            <p>Drag and drop an image (JPG, PNG, WebP&hellip;) or <strong>SVG</strong>. <strong>Bitmap</strong> import is the default so your image appears on the canvas; uncheck to trace vectorize instead.</p>
+                            <div class="import-options">
+                                <label class="import-option"><input type="checkbox" id="import-raster-only" checked /> Bitmap only (place the image on the canvas; use Pixel tool to paint)</label>
+                                <label class="import-option"><input type="checkbox" id="import-cell-poster" /> Cell poster only (fast blocks, skip edge trace)</label>
+                            </div>
+                            <p class="hint">After a <em>Bitmap only</em> import, pick <strong>Pixel</strong> in the toolbar and draw on the image with the current HEX color.</p>
+                            <button type="button" id="browse-button" class="button">Browse files</button>
+                            <input type="file" id="file-upload" accept="image/*,image/svg+xml,application/json,.dopple" class="hidden" />
+                            <p id="upload-instructions" class="hidden"></p>
+                            <div id="progress-bar" class="hidden">
+                                <div id="progress-fill"></div>
+                            </div>
+                            <p id="loading-message" class="hidden">Processing... <span class="loader"></span></p>
+                            <p id="error-message" class="hidden"></p>
+                            <p id="confirmation-message" class="hidden">File processed successfully!</p>
+                            <div id="file-preview" class="hidden">
+                                <canvas id="preview-canvas" width="200" height="200"></canvas>
+                                <button type="button" id="add-preview" class="button">Add to canvas</button>
+                            </div>
+                            <img id="thumbnail-preview" class="hidden" alt="Uploaded image thumbnail" />
+                        </div>
+                    </section>
+                    <section id="controls-section">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label for="color-wheel">Color picker</label>
+                                <canvas id="color-wheel" width="120" height="120"></canvas>
+                            </div>
+                            <div class="control-group">
+                                <label for="lightness-slider">Lightness: <span id="lightness-value">50%</span></label>
+                                <input type="range" id="lightness-slider" min="0" max="100" value="50" aria-valuenow="50" aria-label="Lightness" />
+                            </div>
+                            <div class="control-group">
+                                <label for="opacity-slider">Opacity: <span id="opacity-value">100%</span></label>
+                                <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Opacity" />
+                            </div>
+                            <div class="control-group">
+                                <label for="stroke-width-slider">Stroke width: <span id="stroke-width-value">1px</span></label>
+                                <input type="range" id="stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Stroke width" />
+                            </div>
+                            <div class="control-group">
+                                <label for="stroke-style">Stroke style</label>
+                                <select id="stroke-style">
+                                    <option value="solid">Solid</option>
+                                    <option value="dashed">Dashed</option>
+                                    <option value="dotted">Dotted</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label for="hex-input">HEX</label>
+                                <input type="text" id="hex-input" maxlength="7" value="#e37800" aria-label="HEX color input" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="rgb-input">RGB</label>
+                                <input type="text" id="rgb-input" value="227,120,0" aria-label="RGB color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="hsl-input">HSL</label>
+                                <input type="text" id="hsl-input" value="32,100%,44%" aria-label="HSL color input" pattern="^\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="native-picker">System color</label>
+                                <input type="color" id="native-picker" value="#e37800" aria-label="System color picker" />
+                                <button type="button" id="system-picker" class="button">Open system picker</button>
+                            </div>
+                            <div class="control-group">
+                                <label for="fill-toggle">Fill shape</label>
+                                <input type="checkbox" id="fill-toggle" checked aria-label="Toggle fill" />
+                            </div>
+                        </div>
+                        <div id="swatches"></div>
+                    </section>
+                    <section id="future-roadmap" class="demo-future" aria-label="Planned features">
+                        <h2 class="demo-future__title">Future functionality (stubs)</h2>
+                        <p>Effects, blend modes, PDF/AI import, real-time collab, and 3D are scaffolded in services but not wired in this demo.</p>
+                    </section>
+                </div>
+            </aside>
+
+            <div class="app-stage">
+                <section id="drawing-tools" aria-label="Tools">
+                    <nav>
+                        <button type="button" id="pen-tool" class="button" title="Pen tool">Pen</button>
+                        <button type="button" id="rect-tool" class="button" title="Rectangle Tool (2)">Rect</button>
+                        <button type="button" id="circle-tool" class="button" title="Circle Tool (3)">Circle</button>
+                        <button type="button" id="polygon-tool" class="button" title="Polygon / star">Polygon</button>
+                        <button type="button" id="select-tool" class="button active" title="Select Tool (S)">Select</button>
+                        <button type="button" id="text-tool" class="button" title="Text Tool (4)">Text</button>
+                        <button type="button" id="bezier-tool" class="button" title="Bezier (multi-click — experimental)" disabled>Bezier</button>
+                        <button type="button" id="gradient-tool" class="button" title="Gradient Tool (G)" disabled>Gradient</button>
+                        <button type="button" id="eyedropper-tool" class="button" title="Pick color from image">Eyedropper</button>
+                        <button type="button" id="undo" class="button" title="Undo (Ctrl+Z)" data-feature="basicDrawing">Undo</button>
+                        <button type="button" id="redo" class="button" title="Redo (Ctrl+Y)" data-feature="basicDrawing">Redo</button>
+                        <button type="button" id="delete" class="button" title="Delete selected" data-feature="basicDrawing">Delete</button>
+                        <button type="button" id="clear-canvas" class="button" title="Clear canvas" data-feature="basicDrawing">Clear</button>
+                        <button type="button" id="pixel-tool" class="button" data-tool="pixel-tool" title="Paint pixels on image">Pixel</button>
+                        <button type="button" id="vectorize" class="button" title="Cellular vectorize (bitmap on canvas)">Vectorize</button>
+                    </nav>
+                </section>
+                <div id="tool-controls" class="tool-controls-host" aria-live="polite"></div>
+                <section id="canvas-section" aria-label="Canvas">
+                    <div class="canvas-container">
+                        <div id="ruler-top" class="ruler ruler-horizontal"></div>
+                        <div id="ruler-left" class="ruler ruler-vertical"></div>
+                        <svg id="grid" class="hidden"></svg>
+                        <canvas id="drawing-canvas" width="800" height="600"></canvas>
+                        <input type="text" id="text-input" class="hidden" placeholder="Enter text" />
+                    </div>
+                    <div id="mobile-controls">
+                        <div id="pinch-zoom-controls">
+                            <button type="button" id="zoom-in" class="button" title="Zoom in" data-feature="basicDrawing">Zoom in</button>
+                            <button type="button" id="zoom-out" class="button" title="Zoom out" data-feature="basicDrawing">Zoom out</button>
+                            <button type="button" id="reset-zoom" class="button" title="Reset zoom" data-feature="basicDrawing">Reset view</button>
+                        </div>
+                        <div id="touch-controls">
+                            <button type="button" id="toggle-touch-drawing" class="button" title="Touch drawing" data-feature="basicDrawing">Touch drawing</button>
+                            <button type="button" id="touch-precision" class="button hidden" title="Precision mode" data-feature="basicDrawing">Precision</button>
+                        </div>
+                    </div>
+                    <div class="snap-row">
+                        <label for="snap-grid">Snap to grid</label>
+                        <input type="checkbox" id="snap-grid" checked />
+                        <label for="grid-size">Cell:</label>
+                        <input type="number" id="grid-size" min="2" max="64" step="1" value="8" aria-label="Grid cell size in pixels" style="width:4em;" />
+                        <span>px</span>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="app-rail app-rail--right" aria-label="Export, layers, settings">
+                <div class="app-rail__scroll">
+                    <section id="export-section">
+                        <div class="controls-grid">
+                            <div class="control-group control-group--filename">
+                                <label for="filename">Filename</label>
+                                <input type="text" id="filename" value="vectorized" aria-label="Export filename" />
+                            </div>
+                            <div class="control-group">
+                                <button type="button" id="export-png" class="button" data-feature="basicExport">PNG</button>
+                                <button type="button" id="export-jpg" class="button" data-feature="basicExport">JPEG</button>
+                                <button type="button" id="export-svg" class="button" data-feature="advancedExport">SVG</button>
+                                <button type="button" id="export-pdf" class="button" data-feature="advancedExport">PDF</button>
+                                <button type="button" id="export-selection" class="button" data-feature="advancedExport">Selection</button>
+                            </div>
+                            <div class="control-group">
+                                <label for="svg-transparent">
+                                    <input type="checkbox" id="svg-transparent" checked /> Transparent SVG
+                                </label>
+                            </div>
+                            <div class="control-group">
+                                <label for="png-transparent">
+                                    <input type="checkbox" id="png-transparent" /> Transparent PNG
+                                </label>
+                            </div>
+                            <div class="control-group" id="png-bg-control" style="display:none;">
+                                <label for="png-bg-color">Background color:</label>
+                                <select id="png-bg-color">
+                                    <option value="white">White</option>
+                                    <option value="black">Black</option>
+                                    <option value="#f0f0f0">Light Gray</option>
+                                    <option value="#cccccc">Medium Gray</option>
+                                    <option value="#333333">Dark Gray</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <button type="button" id="save-project" class="button" data-feature="basicExport">Save project</button>
+                                <button type="button" id="load-project" class="button" data-feature="basicExport">Load project</button>
+                                <input type="file" id="project-upload" accept=".json,.dopple" class="hidden" />
+                            </div>
+                        </div>
+                    </section>
+                    <section id="properties-section" class="hidden">
+                        <h3>Object properties</h3>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <label for="fill-color-input">Fill (HEX)</label>
+                                <input type="text" id="fill-color-input" maxlength="7" aria-label="Object fill color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="stroke-color-input">Stroke (HEX)</label>
+                                <input type="text" id="stroke-color-input" maxlength="7" aria-label="Object stroke color" pattern="^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" />
+                            </div>
+                            <div class="control-group">
+                                <label for="object-opacity-slider">Opacity</label>
+                                <input type="range" id="object-opacity-slider" min="0" max="1" step="0.01" value="1" aria-valuenow="1" aria-label="Object opacity" />
+                            </div>
+                            <div class="control-group">
+                                <label for="object-stroke-width-slider">Stroke width</label>
+                                <input type="range" id="object-stroke-width-slider" min="1" max="20" value="1" aria-valuenow="1" aria-label="Object stroke width" />
+                            </div>
+                        </div>
+                    </section>
+                    <section id="layer-section">
+                        <h3>Layers</h3>
+                        <div id="timeline" class="layer-timeline">
+                            <button type="button" id="prev-version" class="button" data-feature="basicLayers">Previous</button>
+                            <button type="button" id="next-version" class="button" data-feature="basicLayers">Next</button>
+                        </div>
+                        <div id="layer-list"></div>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="add-layer" class="button" data-feature="basicLayers">Add layer</button>
+                                <button type="button" id="toggle-layer-visibility" class="button" data-feature="basicLayers">Visibility</button>
+                                <button type="button" id="toggle-layer-lock" class="button" data-feature="basicLayers">Lock</button>
+                                <button type="button" id="add-group" class="button" data-feature="layerEffects">Group</button>
+                                <button type="button" id="layer-mask" class="button" data-feature="layerEffects">Mask</button>
+                                <button type="button" id="layer-effects" class="button" data-feature="layerEffects">Effects</button>
+                                <button type="button" id="layer-blend" class="button" data-feature="layerEffects">Blend</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="settings-section">
+                        <h3>Settings</h3>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="theme-toggle" class="button">Theme</button>
+                                <button type="button" id="high-contrast-toggle" class="button">High contrast</button>
+                                <button type="button" id="reset-session" class="button">Reset session</button>
+                            </div>
+                            <div class="control-group control-group--settings-toggles">
+                                <button type="button" id="debug-toggle" class="button">Debug</button>
+                                <button type="button" id="help-toggle" class="button">Help</button>
+                                <label for="autosave-toggle">
+                                    <input type="checkbox" id="autosave-toggle" checked /> Autosave
+                                </label>
+                                <label for="shortcuts-toggle">
+                                    <input type="checkbox" id="shortcuts-toggle" checked /> Shortcuts
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="advanced-tools" class="hidden">
+                        <h3>Vector ops</h3>
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="path-union" class="button" data-feature="pathOperations">Union</button>
+                                <button type="button" id="path-intersect" class="button" data-feature="pathOperations">Intersect</button>
+                                <button type="button" id="path-difference" class="button" data-feature="pathOperations">Difference</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="collaboration" class="hidden">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="share-project" class="button" data-feature="realtimeCollaboration">Share</button>
+                                <button type="button" id="invite-collaborators" class="button" data-feature="realtimeCollaboration">Invite</button>
+                                <button type="button" id="view-history" class="button" data-feature="realtimeCollaboration">History</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="plugins" class="hidden">
+                        <div class="controls-grid">
+                            <div class="control-group">
+                                <button type="button" id="plugin-manager" class="button" data-feature="pluginSystem">Plugins</button>
+                                <button type="button" id="install-plugin" class="button" data-feature="pluginSystem">Install</button>
+                                <button type="button" id="plugin-settings" class="button" data-feature="pluginSystem">Settings</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </aside>
         </div>
-    </main>
 
-    <footer>
-        <div style="font-size: 10px; color: #666;">v1.0 — GSRF Snap Stabilizer | Pro v2 coming 2026</div>
-        <div class="export-buttons">
-            <button class="btn" onclick="exportCanvas()">📥 Export PNG</button>
-            <button class="btn">📤 Upload</button>
+        <div id="preview-window" class="hidden"></div>
+        <div id="debug-panel" class="app-modal" style="display: none;" role="dialog" aria-label="Debug">
+            <h3>Debug</h3>
+            <pre id="svg-output"></pre>
+            <button type="button" id="close-debug" class="button">Close</button>
         </div>
-    </footer>
-
-    <script>
-        // GSRF Snap Filter
-        class GSRFSnapFilter {
-            constructor() {
-                this.beta = 0.6;
-                this.mem = 0.3;
-                this.k_return = 1.2;
-                this.gridSize = 10;
-                this.previous = null;
-                this.history = [];
-            }
-
-            filter(current, target) {
-                if (this.previous === null) {
-                    this.previous = current;
-                    return current;
-                }
-
-                const gradient = -(current - target);
-                let memory = this.history.length > 0 ? Math.tanh(current - this.previous) : 0;
-                const update = this.k_return * gradient + this.mem * memory;
-                const filtered = current + this.beta * update;
-
-                this.history.push(current);
-                if (this.history.length > 5) this.history.shift();
-                this.previous = filtered;
-                return filtered;
-            }
-
-            snapAndFilter(x, y) {
-                const snappedX = Math.round(x / this.gridSize) * this.gridSize;
-                const snappedY = Math.round(y / this.gridSize) * this.gridSize;
-                return {
-                    x: this.filter(x, snappedX),
-                    y: this.filter(y, snappedY)
-                };
-            }
-
-            reset() {
-                this.previous = null;
-                this.history = [];
-            }
-        }
-
-        // Canvas setup
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const colorInput = document.getElementById('colorInput');
-        const gsrf = new GSRFSnapFilter();
-
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            drawGrid();
-        }
-
-        function drawGrid() {
-            ctx.strokeStyle = '#f0f0f0';
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i < canvas.width; i += 10) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
-            }
-            for (let i = 0; i < canvas.height; i += 10) {
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(canvas.width, i);
-                ctx.stroke();
-            }
-        }
-
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-
-        canvas.addEventListener('mousedown', (e) => {
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            lastX = e.clientX - rect.left;
-            lastY = e.clientY - rect.top;
-            gsrf.reset();
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing) return;
-            const rect = canvas.getBoundingClientRect();
-            let x = e.clientX - rect.left;
-            let y = e.clientY - rect.top;
-
-            // Apply GSRF snap filtering
-            const snapped = gsrf.snapAndFilter(x, y);
-            x = snapped.x;
-            y = snapped.y;
-
-            ctx.strokeStyle = colorInput.value;
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-
-            lastX = x;
-            lastY = y;
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            isDrawing = false;
-        });
-
-        canvas.addEventListener('mouseleave', () => {
-            isDrawing = false;
-        });
-
-        // Color swatches
-        const colors = ['#0066cc', '#ff6b6b', '#4db84d', '#ffd700', '#ff8c00', '#9b59b6'];
-        const swatchContainer = document.getElementById('colorSwatches');
-        colors.forEach(color => {
-            const swatch = document.createElement('div');
-            swatch.className = 'swatch';
-            swatch.style.backgroundColor = color;
-            swatch.onclick = () => {
-                colorInput.value = color;
-            };
-            swatchContainer.appendChild(swatch);
-        });
-
-        // Color input
-        colorInput.addEventListener('change', () => {
-            if (!/^#[0-9A-F]{6}$/i.test(colorInput.value)) {
-                colorInput.value = '#0066cc';
-            }
-        });
-
-        // Export
-        function exportCanvas() {
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = 'doppleit-design.png';
-            link.click();
-        }
-
-        // Initialize
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-    </script>
+        <div id="help-modal" class="app-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+            <h3 id="help-modal-title">Doppleit Vector — help</h3>
+            <p><strong>Tools:</strong> Pen (1), Rectangle (2), Circle (3), Text (4), or Select (S) to draw or edit.</p>
+            <p><strong>Layers:</strong> Add, rename (double-click), drag to reorder, or group. Toggle visibility/lock.</p>
+            <p><strong>Timeline:</strong> Previous/Next for version history when enabled.</p>
+            <p><strong>Color:</strong> Wheel, sliders, or HEX/RGB/HSL.</p>
+            <p><strong>Export:</strong> SVG, PNG, JPEG, or save/load project files.</p>
+            <p><strong>UX:</strong> Shift for uniform scale, Alt to duplicate, drag guides from rulers.</p>
+            <p><strong>Shortcuts:</strong> Undo (Ctrl+Z), Redo (Ctrl+Y), Delete, Escape, tools 1–4 and S.</p>
+            <p><strong>Mobile:</strong> Pinch to zoom, touch controls below the canvas when shown.</p>
+            <button type="button" id="close-help" class="button">Close</button>
+        </div>
+        <div id="autosave-notification" style="display: none;" role="status">Project autosaved</div>
+        <div id="tooltip" style="display: none;" role="tooltip"></div>
+    </div>
+    <!-- Entry script is injected by Webpack (npm run build / npm run dev). Do not add
+         src="src/js/app.js" here: on Netlify, SPA routing would return index.html and break modules. -->
 </body>
 </html>

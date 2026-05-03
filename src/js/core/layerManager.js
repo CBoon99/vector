@@ -315,9 +315,11 @@ export class LayerManager {
                             ctx.fillStyle = obj.fill;
                             ctx.fill();
                         }
-                        if (obj.stroke && (obj.stroke.color || obj.stroke) !== 'none') {
-                            ctx.strokeStyle = obj.stroke?.color || '#111';
-                            ctx.lineWidth = obj.stroke?.width || 1;
+                        const strokeStr =
+                            typeof obj.stroke === 'string' ? obj.stroke : obj.stroke?.color;
+                        if (strokeStr && strokeStr !== 'none') {
+                            ctx.strokeStyle = strokeStr;
+                            ctx.lineWidth = obj.strokeWidth || obj.stroke?.width || 1;
                             ctx.stroke();
                         }
                     }

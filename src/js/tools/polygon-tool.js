@@ -1,8 +1,9 @@
 // Polygon Tool with Star Shape Support
-export class PolygonTool {
+import { Tool } from './tool.js';
+
+export class PolygonTool extends Tool {
     constructor(stateManager, layerManager) {
-        this.stateManager = stateManager;
-        this.layerManager = layerManager;
+        super('Polygon', '⬡', 'crosshair');
         this.currentShape = null;
         this.options = {
             sides: 5,
@@ -14,6 +15,9 @@ export class PolygonTool {
             fill: 'transparent',
             isStar: false
         };
+        if (stateManager != null && layerManager != null) {
+            this.initialize(layerManager, stateManager);
+        }
     }
 
     // Tool Interface
@@ -53,7 +57,9 @@ export class PolygonTool {
             point.x - center.x
         );
         
-        this.drawShape(context);
+        if (context) {
+            this.drawShape(context);
+        }
     }
 
     stopDrawing(event, canvas, context) {
@@ -120,18 +126,6 @@ export class PolygonTool {
         } catch (error) {
             console.error('Error drawing polygon shape:', error);
         }
-    }
-
-    // Utility Methods
-    getCanvasPoint(event, canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        return {
-            x: (event.clientX - rect.left) * scaleX,
-            y: (event.clientY - rect.top) * scaleY
-        };
     }
 
     setOption(key, value) {

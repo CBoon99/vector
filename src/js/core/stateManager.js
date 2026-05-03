@@ -119,7 +119,7 @@ export class StateManager {
         }
         this.history.push({
             timestamp: Date.now(),
-            objects: this.getCurrentState()
+            layers: this.snapshotLayers()
         });
         this.currentIndex = this.history.length - 1;
         if (this.history.length > this.maxHistorySize) {
@@ -128,16 +128,57 @@ export class StateManager {
         }
     }
 
-    undo() {
-        if (this.currentIndex > 0) {
-            this.currentIndex--;
+    snapshotLayers() {
+        if (!this.layerManager) return [];
+        return this.layerManager.getLayers().map((l) => ({
+            id: l.id,
+            name: l.name,
+            hidden: !!l.hidden,
+            locked: !!l.locked,
+            objects: (l.objects || []).map((o) => ({ ...o }))
+        }));
+    }
+
+    applyHistorySnapshot() {
+        const entry = this.history[this.currentIndex];
+        if (!entry || !this.layerManager) return;
+
+        if (entry.layers && Array.isArray(entry.layers)) {
+            const lm = this.layerManager;
+            lm.layers = entry.layers.map((l) => ({
+                id: l.id,
+                name: l.name,
+                hidden: !!l.hidden,
+                locked: !!l.locked,
+                objects: (l.objects || []).map((o) => ({ ...o }))
+            }));
+            if (!lm.layers.some((l) => l.id === lm.activeLayerId)) {
+                lm.activeLayerId = lm.layers[0]?.id || 'default';
+            }
+            lm._emitChange();
+            return;
+        }
+
+        /* Legacy entries stored a flat object list on the first layer */
+        if (Array.isArray(entry.objects)) {
+            const layer = this.layerManager.getLayers()[0];
+            if (layer) {
+                layer.objects = entry.objects.map((o) => ({ ...o }));
+                this.layerManager._emitChange();
+            }
         }
     }
 
+    undo() {
+        if (this.currentIndex <= 0) return;
+        this.currentIndex--;
+        this.applyHistorySnapshot();
+    }
+
     redo() {
-        if (this.currentIndex < this.history.length - 1) {
-            this.currentIndex++;
-        }
+        if (this.currentIndex >= this.history.length - 1) return;
+        this.currentIndex++;
+        this.applyHistorySnapshot();
     }
 
     canUndo() {

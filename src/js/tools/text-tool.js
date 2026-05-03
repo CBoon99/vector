@@ -2,11 +2,8 @@ import { Tool } from './tool.js';
 import { generateId } from '../utils/id-generator.js';
 
 export class TextTool extends Tool {
-    constructor(stateManager, layerManager) {
-        super(stateManager, layerManager);
-        this.name = 'text';
-        this.icon = 'text-icon';
-        this.cursor = 'text';
+    constructor() {
+        super('Text', 'T', 'text');
         this.activeTextElement = null;
         this.textBox = null;
     }
@@ -24,16 +21,17 @@ export class TextTool extends Tool {
     }
 
     startDrawing(event, canvas, context) {
+        const pt = this.getCanvasPoint(event, canvas);
+        const cm = this.stateManager.canvasManager;
         const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const sx = cm ? rect.left + cm.offsetX + pt.x * cm.scale : rect.left + pt.x;
+        const sy = cm ? rect.top + cm.offsetY + pt.y * cm.scale : rect.top + pt.y;
 
-        // Create new text element
         this.activeTextElement = {
             id: generateId(),
             type: 'text',
-            x,
-            y,
+            x: pt.x,
+            y: pt.y,
             text: '',
             fontSize: 16,
             fontFamily: 'Arial',
@@ -43,8 +41,7 @@ export class TextTool extends Tool {
             height: 24
         };
 
-        // Create text input box
-        this.createTextBox(x, y);
+        this.createTextBox(sx, sy);
     }
 
     createTextBox(x, y) {
@@ -101,8 +98,8 @@ export class TextTool extends Tool {
         if (this.activeTextElement && this.textBox) {
             // Only save if there's actual text
             if (this.activeTextElement.text.trim()) {
-                this.layerManager.addLayer(this.activeTextElement);
-                this.stateManager.saveState();
+                this.layerManager.addObject(this.activeTextElement);
+                this.stateManager.saveHistory();
             }
             
             // Clean up
@@ -110,6 +107,10 @@ export class TextTool extends Tool {
             this.textBox = null;
             this.activeTextElement = null;
         }
+    }
+
+    stopDrawing() {
+        /* Commit happens on Enter / blur */
     }
 
     cancelText() {
@@ -120,13 +121,15 @@ export class TextTool extends Tool {
         }
     }
 
-    draw(context) {
-        // Draw existing text elements
+    draw(_event, _canvas, context) {
+        if (!context || !this.layerManager) return;
         const layers = this.layerManager.getLayers();
-        layers.forEach(layer => {
-            if (layer.type === 'text') {
-                this.drawTextElement(context, layer);
-            }
+        layers.forEach((layer) => {
+            (layer.objects || []).forEach((obj) => {
+                if (obj.type === 'text') {
+                    this.drawTextElement(context, obj);
+                }
+            });
         });
     }
 

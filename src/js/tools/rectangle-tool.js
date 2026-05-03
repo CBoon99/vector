@@ -37,8 +37,9 @@ export class RectangleTool extends Tool {
         this.currentShape.width = currentPoint.x - this.startPoint.x;
         this.currentShape.height = currentPoint.y - this.startPoint.y;
         
-        // Draw preview
-        this.drawShape(context);
+        if (context) {
+            this.drawShape(context);
+        }
     }
 
     stopDrawing(event, canvas, context) {
@@ -93,16 +94,5 @@ export class RectangleTool extends Tool {
         context.stroke();
         
         context.restore();
-    }
-
-    getCanvasPoint(event, canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        return {
-            x: (event.clientX - rect.left) * scaleX,
-            y: (event.clientY - rect.top) * scaleY
-        };
     }
 }

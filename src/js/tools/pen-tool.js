@@ -25,24 +25,34 @@ export class PenTool extends Tool {
         };
         
         this.points = [point];
-        
-        // Start the path
-        context.beginPath();
-        context.moveTo(point.x, point.y);
-        context.strokeStyle = this.currentPath.stroke;
-        context.lineWidth = this.currentPath.strokeWidth;
     }
 
     draw(event, canvas, context) {
         if (!this.isDrawing || !this.currentPath) return;
-        
+
         const point = this.getCanvasPoint(event, canvas);
-        this.points.push(point);
+        const last = this.points[this.points.length - 1];
+        if (!last || Math.hypot(point.x - last.x, point.y - last.y) > 0.5) {
+            this.points.push(point);
+        } else {
+            this.points[this.points.length - 1] = point;
+        }
         this.currentPath.points = [...this.points];
-        
-        // Draw line to current point
-        context.lineTo(point.x, point.y);
+
+        if (!context) return;
+
+        context.save();
+        context.beginPath();
+        context.strokeStyle = this.currentPath.stroke;
+        context.lineWidth = this.currentPath.strokeWidth;
+        if (this.points.length > 0) {
+            context.moveTo(this.points[0].x, this.points[0].y);
+            for (let i = 1; i < this.points.length; i++) {
+                context.lineTo(this.points[i].x, this.points[i].y);
+            }
+        }
         context.stroke();
+        context.restore();
     }
 
     stopDrawing(event, canvas, context) {
@@ -58,16 +68,5 @@ export class PenTool extends Tool {
         
         this.currentPath = null;
         this.points = [];
-    }
-
-    getCanvasPoint(event, canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        return {
-            x: (event.clientX - rect.left) * scaleX,
-            y: (event.clientY - rect.top) * scaleY
-        };
     }
 }

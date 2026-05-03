@@ -158,6 +158,7 @@ export class CanvasManager {
         this.onDraw = null;
         this.onDrawEnd = null;
         this.onDrawLayers = null;
+        this.onDrawOverlay = null;
         this.onZoom = null;
         this.onPan = null;
 
@@ -805,6 +806,10 @@ export class CanvasManager {
             }
         }
 
+        if (typeof this.onDrawOverlay === 'function') {
+            this.onDrawOverlay(this.bufferCtx);
+        }
+
         // Restore context state
         this.bufferCtx.restore();
 
@@ -867,7 +872,7 @@ export class CanvasManager {
         this.lastY = pos.y;
 
         if (this.onDrawStart) {
-            this.onDrawStart(this.maybeSnap(pos));
+            this.onDrawStart(this.maybeSnap(pos), event);
         }
     }
 
@@ -916,7 +921,7 @@ export class CanvasManager {
                     this.onPan(this.offsetX, this.offsetY);
                 }
             } else if (this.onDraw) {
-                this.onDraw(this.maybeSnap(pos));
+                this.onDraw(this.maybeSnap(pos), event);
             }
         }
     }
@@ -927,7 +932,7 @@ export class CanvasManager {
             this.isDragging = false;
             const pos = this.getMousePosition(event);
             if (this.onDrawEnd) {
-                this.onDrawEnd(this.maybeSnap(pos));
+                this.onDrawEnd(this.maybeSnap(pos), event);
             }
         }
     }
@@ -937,7 +942,7 @@ export class CanvasManager {
         if (this.isDragging) {
             this.isDragging = false;
             if (this.onDrawEnd) {
-                this.onDrawEnd(this.maybeSnap(this.getMousePosition(event)));
+                this.onDrawEnd(this.maybeSnap(this.getMousePosition(event)), event);
             }
         }
     }
@@ -1001,7 +1006,7 @@ export class CanvasManager {
             this.touchStartY = touch.clientY;
 
             if (this.onDrawStart) {
-                this.onDrawStart(this.maybeSnap(pos));
+                this.onDrawStart(this.maybeSnap(pos), event);
             }
         } else if (event.touches.length === 2) {
             // Two touches - handle pinch zoom
@@ -1060,7 +1065,7 @@ export class CanvasManager {
                     this.onPan(this.offsetX, this.offsetY);
                 }
             } else if (this.onDraw) {
-                this.onDraw(this.maybeSnap(pos));
+                this.onDraw(this.maybeSnap(pos), event);
             }
         } else if (event.touches.length === 2 && this.isPinching) {
             // Pinch zoom
@@ -1087,7 +1092,8 @@ export class CanvasManager {
             if (this.isDragging) {
                 this.isDragging = false;
                 if (this.onDrawEnd) {
-                    this.onDrawEnd(this.maybeSnap({ x: this.lastX, y: this.lastY }));
+                    const te = event.changedTouches && event.changedTouches[0];
+                    this.onDrawEnd(this.maybeSnap({ x: this.lastX, y: this.lastY }), te || event);
                 }
             }
             if (this.isPinching) {
