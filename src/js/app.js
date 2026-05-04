@@ -29,6 +29,7 @@ import { LayerPanel } from './components/layer-panel.js';
 import SmartShapeTool from './tools/smart-shape-tool.js';
 import SmartConstraintsTool from './tools/smart-constraints-tool.js';
 import { initColorPickerWheel } from './components/colorPickerWheel.js';
+import { initComingSoon } from './utils/comingSoon.js';
 
 class App {
     constructor(canvasElement) {
@@ -449,6 +450,9 @@ class App {
     setupToolSelectionListeners() {
         const toolButtons = document.querySelectorAll('#drawing-tools button');
         toolButtons.forEach(button => {
+            if (button.hasAttribute('data-coming-soon')) {
+                return;
+            }
             button.addEventListener('click', () => {
                 const toolId = button.id;
                 this.selectTool(toolId);
@@ -721,6 +725,10 @@ class App {
     }
 
     selectTool(toolId) {
+        const blocked = document.getElementById(toolId);
+        if (blocked?.hasAttribute?.('data-coming-soon')) {
+            return;
+        }
         this.stateManager.setCurrentTool(toolId);
         this.updateToolUI(toolId);
 
@@ -881,6 +889,9 @@ class App {
         }
         const toolButtons = document.querySelectorAll('#drawing-tools button');
         toolButtons.forEach((button) => {
+            if (button.hasAttribute('data-coming-soon')) {
+                return;
+            }
             const feature = button.dataset.feature;
             if (feature && !features.includes(feature)) {
                 button.disabled = true;
@@ -1180,7 +1191,7 @@ class App {
     setupLayerControls() {
         const on = (id, fn) => {
             const el = document.getElementById(id);
-            if (el) {
+            if (el && !el.hasAttribute('data-coming-soon')) {
                 el.addEventListener('click', fn);
             }
         };
@@ -1270,6 +1281,10 @@ class App {
 
     updateToolUI(toolId) {
         document.querySelectorAll('#drawing-tools button').forEach((btn) => {
+            if (btn.hasAttribute('data-coming-soon')) {
+                btn.classList.remove('active');
+                return;
+            }
             btn.classList.toggle('active', btn.id === toolId);
         });
         document.querySelectorAll('[data-tool]').forEach((element) => {
@@ -1450,6 +1465,7 @@ function bootstrapDoppleitApp() {
         return;
     }
     window.doppleitApp = new App(canvas);
+    initComingSoon();
 }
 
 if (document.readyState === 'loading') {
